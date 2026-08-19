@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="es" class="editor-body">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Editor de Contenido</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="editor-body">
+
+<div class="container editor-page py-5">
+  <a class="back-link" href="anuncios.html"><i class="bi bi-arrow-left"></i> Volver a la pantalla</a>
+
+  <div class="card shadow-sm">
+    <div class="card-body p-4 p-md-5">
+      <h2 class="mb-4 fw-bold">Contenido de la pantalla</h2>
+
+      <div class="editor-tabs" id="editorTabs">
+        <button class="editor-tab active" data-tab="anuncios" type="button"><i class="bi bi-megaphone-fill"></i> Anuncios</button>
+        <button class="editor-tab" data-tab="videos" type="button"><i class="bi bi-youtube"></i> Videos</button>
+        <button class="editor-tab" data-tab="cumpleanos" type="button"><i class="bi bi-gift-fill"></i> Cumpleaños</button>
+        <button class="editor-tab" data-tab="frase" type="button"><i class="bi bi-book-half"></i> Palabra del día</button>
+      </div>
+
+      <div class="editor-tab-panel" id="tab-anuncios">
+      <div class="row g-3 mb-4">
+        <div class="col-12">
+          <label class="form-label" for="inpTitle">Título</label>
+          <input type="text" class="form-control" id="inpTitle" placeholder="Ej. Junta general el viernes">
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="inpDesc">Descripción (opcional)</label>
+          <textarea class="form-control" id="inpDesc" rows="2" placeholder="Detalles del anuncio..."></textarea>
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="inpFile">Imagen o archivo (opcional)</label>
+          <div class="d-flex align-items-center gap-3">
+            <input type="file" class="form-control" id="inpFile" accept="image/*">
+            <img class="thumb-preview" id="thumbPreview">
+          </div>
+          <div class="form-text">La imagen se comprime automáticamente para no llenar el almacenamiento del navegador.</div>
+        </div>
+        <div class="col-12 d-flex gap-2 justify-content-end">
+          <button class="btn btn-outline-secondary" id="clearForm">Limpiar</button>
+          <button class="btn btn-primary" id="addAnn"><i class="bi bi-plus-lg me-1"></i>Agregar anuncio</button>
+        </div>
+      </div>
+
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <span class="text-uppercase small fw-bold text-muted" style="letter-spacing:1.5px;">Anuncios activos</span>
+        <span class="badge text-bg-secondary" id="countAnn">0</span>
+      </div>
+      <div class="list-group mb-4" id="annList"></div>
+      </div>
+
+      <div class="editor-tab-panel d-none" id="tab-videos">
+      <div class="row g-3 mb-4">
+        <div class="col-12">
+          <label class="form-label" for="inpVideoUrl">Enlace de YouTube</label>
+          <input type="text" class="form-control" id="inpVideoUrl" placeholder="https://www.youtube.com/watch?v=...">
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="inpVideoTitle">Título del video (opcional)</label>
+          <input type="text" class="form-control" id="inpVideoTitle" placeholder="Ej. Cambiar de empresa un usuario">
+        </div>
+        <div class="col-12 d-flex gap-2 justify-content-end">
+          <button class="btn btn-outline-secondary" id="clearVideoForm">Limpiar</button>
+          <button class="btn btn-primary" id="addVideo"><i class="bi bi-plus-lg me-1"></i>Agregar video</button>
+        </div>
+        <div class="col-12">
+          <div class="form-text">Los videos se reproducen silenciados (requisito de autoplay de los navegadores) y completos; al terminar, el carrusel avanza al siguiente contenido.</div>
+        </div>
+      </div>
+
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <span class="text-uppercase small fw-bold text-muted" style="letter-spacing:1.5px;">Videos activos</span>
+        <span class="badge text-bg-secondary" id="countVideos">0</span>
+      </div>
+      <div class="list-group mb-4" id="videoList"></div>
+      </div>
+
+      <div class="editor-tab-panel d-none" id="tab-cumpleanos">
+      <div class="row g-3 mb-4">
+        <div class="col-12">
+          <label class="form-label" for="inpBirthdayName">Nombre</label>
+          <input type="text" class="form-control" id="inpBirthdayName" placeholder="Ej. Juan Pérez">
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="inpBirthdayDate">Fecha de cumpleaños</label>
+          <input type="date" class="form-control" id="inpBirthdayDate">
+          <div class="form-text">Solo se usa el día y el mes; se repite cada año.</div>
+        </div>
+        <div class="col-12 d-flex gap-2 justify-content-end">
+          <button class="btn btn-outline-secondary" id="clearBirthdayForm">Limpiar</button>
+          <button class="btn btn-primary" id="addBirthday"><i class="bi bi-plus-lg me-1"></i>Agregar cumpleaños</button>
+        </div>
+      </div>
+
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <span class="text-uppercase small fw-bold text-muted" style="letter-spacing:1.5px;">Cumpleaños registrados</span>
+        <span class="badge text-bg-secondary" id="countBirthdays">0</span>
+      </div>
+      <div class="list-group mb-4" id="birthdayList"></div>
+      </div>
+
+      <div class="editor-tab-panel d-none" id="tab-frase">
+      <div class="row g-3 mb-3">
+        <div class="col-12">
+          <label class="form-label" for="inpVerseText">Versículo</label>
+          <textarea class="form-control" id="inpVerseText" rows="2" placeholder="Ej. Todo lo puedo en Cristo que me fortalece."></textarea>
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="inpVerseRef">Referencia</label>
+          <input type="text" class="form-control" id="inpVerseRef" placeholder="Ej. Filipenses 4:13">
+        </div>
+        <div class="col-12 d-flex gap-2 justify-content-end">
+          <button class="btn btn-outline-secondary" id="clearVerseBtn">Quitar de la pantalla</button>
+          <button class="btn btn-primary" id="saveVerseBtn"><i class="bi bi-check-lg me-1"></i>Guardar</button>
+        </div>
+        <div class="col-12">
+          <div class="form-text" id="verseStatus">Actualmente no hay ningún versículo en pantalla.</div>
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script>
+/* ================= PESTAÑAS ================= */
+document.querySelectorAll('.editor-tab').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.editor-tab').forEach(b=> b.classList.remove('active'));
+    document.querySelectorAll('.editor-tab-panel').forEach(p=> p.classList.add('d-none'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.remove('d-none');
+  });
+});
+
+let announcements = loadAnnouncements();
+let videos = seedDefaultVideosIfNeeded(loadVideos());
+let pendingImage = null;
+
+const inpTitle = document.getElementById('inpTitle');
+const inpDesc = document.getElementById('inpDesc');
+const inpFile = document.getElementById('inpFile');
+const thumbPreview = document.getElementById('thumbPreview');
+const addAnnBtn = document.getElementById('addAnn');
+const clearFormBtn = document.getElementById('clearForm');
+const inpVideoUrl = document.getElementById('inpVideoUrl');
+const inpVideoTitle = document.getElementById('inpVideoTitle');
+const addVideoBtn = document.getElementById('addVideo');
+const clearVideoFormBtn = document.getElementById('clearVideoForm');
+const inpBirthdayName = document.getElementById('inpBirthdayName');
+const inpBirthdayDate = document.getElementById('inpBirthdayDate');
+const addBirthdayBtn = document.getElementById('addBirthday');
+const clearBirthdayFormBtn = document.getElementById('clearBirthdayForm');
+let birthdays = loadBirthdays();
+
+/* ================= ANUNCIOS ================= */
+inpFile.addEventListener('change', ()=>{
+  const file = inpFile.files[0];
+  if(!file) { pendingImage = null; thumbPreview.style.display='none'; return; }
+  compressImage(file, (dataUrl)=>{
+    pendingImage = dataUrl;
+    thumbPreview.src = dataUrl;
+    thumbPreview.style.display = 'block';
+  });
+});
+
+function compressImage(file, callback){
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      let { width, height } = img;
+      if(width > MAX_IMG_WIDTH){
+        height = Math.round(height * (MAX_IMG_WIDTH / width));
+        width = MAX_IMG_WIDTH;
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      callback(canvas.toDataURL('image/jpeg', JPEG_QUALITY));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function resetForm(){
+  inpTitle.value = '';
+  inpDesc.value = '';
+  inpFile.value = '';
+  pendingImage = null;
+  thumbPreview.style.display = 'none';
+}
+clearFormBtn.addEventListener('click', resetForm);
+
+addAnnBtn.addEventListener('click', ()=>{
+  const title = inpTitle.value.trim();
+  if(!title){ inpTitle.focus(); return; }
+  const newAnn = { title, desc: inpDesc.value.trim(), image: pendingImage || null, id: Date.now() };
+  announcements.push(newAnn);
+  if(saveAnnouncements(announcements)){
+    window.location.href = 'anuncios.html';
+  }
+});
+
+//esta función renderiza la lista de anuncios en el editor, mostrando el título, 
+// descripción y miniatura si existe, y permite eliminar anuncios.
+function renderAnnList(){
+  const wrap = document.getElementById('annList');
+  document.getElementById('countAnn').textContent = announcements.length;
+  if(announcements.length === 0){
+    wrap.innerHTML = '<div class="text-muted small py-2">No hay anuncios agregados todavía.</div>';
+    return;
+  }
+  wrap.innerHTML = '';
+  announcements.forEach((a)=>{
+    const item = document.createElement('div');
+    item.className = 'list-group-item d-flex align-items-center gap-3 rounded mb-2';
+    item.innerHTML = `
+      ${a.image ? `<img class="item-thumb" src="${a.image}" alt="">` : `<div class="item-thumb-empty"><i class="bi bi-image"></i></div>`}
+      <div class="item-info">
+        <div class="t">${escapeHtml(a.title)}</div>
+        <div class="d">${escapeHtml(a.desc || 'Sin descripción')}</div>
+      </div>
+      <button class="btn btn-outline-danger btn-sm" data-id="${a.id}" title="Eliminar"><i class="bi bi-trash3"></i></button>
+    `;
+    wrap.appendChild(item);
+  });
+  wrap.querySelectorAll('.btn-outline-danger').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = Number(btn.dataset.id);
+      announcements = announcements.filter(a => a.id !== id);
+      saveAnnouncements(announcements);
+      renderAnnList();
+    });
+  });
+}
+
+/* ================= VIDEOS ================= */
+//creamos la función para reiniciar el formulario de videos.
+function resetVideoForm(){
+  inpVideoUrl.value = '';
+  inpVideoTitle.value = '';
+}
+clearVideoFormBtn.addEventListener('click', resetVideoForm);
+
+addVideoBtn.addEventListener('click', ()=>{
+  const url = inpVideoUrl.value.trim();
+  const youtubeId = extractYouTubeId(url);
+  if(!youtubeId){
+    alert('No se reconoció un enlace válido de YouTube. Copia la URL completa del video (ej. https://www.youtube.com/watch?v=XXXXXXXXXXX).');
+    inpVideoUrl.focus();
+    return;
+  }
+  const newVideo = { url, title: inpVideoTitle.value.trim(), youtubeId, id: Date.now() };
+  videos.push(newVideo);
+  if(saveVideos(videos)){
+    window.location.href = 'anuncios.html';
+  }
+});
+
+function renderVideoList(){
+  const wrap = document.getElementById('videoList');
+  document.getElementById('countVideos').textContent = videos.length;
+  if(videos.length === 0){
+    wrap.innerHTML = '<div class="text-muted small py-2">No hay videos agregados todavía.</div>';
+    return;
+  }
+  wrap.innerHTML = '';
+  videos.forEach((v)=>{
+    const item = document.createElement('div');
+    item.className = 'list-group-item d-flex align-items-center gap-3 rounded mb-2';
+    item.innerHTML = `
+      <img class="item-thumb" src="https://img.youtube.com/vi/${v.youtubeId}/mqdefault.jpg" alt="">
+      <div class="item-info">
+        <div class="t">${escapeHtml(v.title || 'Video de YouTube')}</div>
+        <div class="d">${escapeHtml(v.url)}</div>
+      </div>
+      <button class="btn btn-outline-danger btn-sm" data-id="${v.id}" title="Eliminar"><i class="bi bi-trash3"></i></button>
+    `;
+    wrap.appendChild(item);
+  });
+  wrap.querySelectorAll('.btn-outline-danger').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = Number(btn.dataset.id);
+      videos = videos.filter(v => v.id !== id);
+      saveVideos(videos);
+      renderVideoList();
+    });
+  });
+}
+
+/* ================= CUMPLEAÑOS ================= */
+
+function resetBirthdayForm(){
+  inpBirthdayName.value = '';
+  inpBirthdayDate.value = '';
+}
+clearBirthdayFormBtn.addEventListener('click', resetBirthdayForm);
+
+addBirthdayBtn.addEventListener('click', ()=>{
+  const name = inpBirthdayName.value.trim();
+  const dateVal = inpBirthdayDate.value;
+  if(!name){ inpBirthdayName.focus(); return; }
+  if(!dateVal){ inpBirthdayDate.focus(); return; }
+  const [, month, day] = dateVal.split('-').map(Number);
+  const newBirthday = { name, month, day, id: Date.now() };
+  birthdays.push(newBirthday);
+  if(saveBirthdays(birthdays)){
+    window.location.href = 'anuncios.html';
+  }
+});
+
+//esta función renderiza la lista de cumpleaños en el editor, 
+// mostrando el nombre y la fecha
+function renderBirthdayList(){
+  const wrap = document.getElementById('birthdayList');
+  document.getElementById('countBirthdays').textContent = birthdays.length;
+  if(birthdays.length === 0){
+    wrap.innerHTML = '<div class="text-muted small py-2">No hay cumpleaños agregados todavía.</div>';
+    return;
+  }
+  wrap.innerHTML = '';
+  birthdays
+    .slice()
+    .sort((a,b)=> a.month - b.month || a.day - b.day)
+    .forEach((b)=>{
+      const item = document.createElement('div');
+      item.className = 'list-group-item d-flex align-items-center gap-3 rounded mb-2';
+      item.innerHTML = `
+        <div class="item-thumb-empty">${escapeHtml(initials(b.name))}</div>
+        <div class="item-info">
+          <div class="t">${escapeHtml(b.name)}</div>
+          <div class="d">${b.day} de ${BIRTHDAY_MONTH_NAMES[b.month - 1]} de ${new Date().getFullYear()}</div>
+        </div>
+        <button class="btn btn-outline-danger btn-sm" data-id="${b.id}" title="Eliminar"><i class="bi bi-trash3"></i></button>
+      `;
+      wrap.appendChild(item);
+    });
+  wrap.querySelectorAll('.btn-outline-danger').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = Number(btn.dataset.id);
+      birthdays = birthdays.filter(b => b.id !== id);
+      saveBirthdays(birthdays);
+      renderBirthdayList();
+    });
+  });
+}
+
+/* ================= PALABRA DEL DÍA ================= */
+const inpVerseText = document.getElementById('inpVerseText');
+const inpVerseRef = document.getElementById('inpVerseRef');
+const saveVerseBtn = document.getElementById('saveVerseBtn');
+const clearVerseBtn = document.getElementById('clearVerseBtn');
+const verseStatus = document.getElementById('verseStatus');
+
+function renderVerseStatus(){
+  const verse = loadVerse();
+  if(verse){
+    inpVerseText.value = verse.text;
+    inpVerseRef.value = verse.reference;
+    verseStatus.textContent = `Actualmente en pantalla: "${verse.text}" — ${verse.reference}`;
+  }else{
+    verseStatus.textContent = 'Actualmente no hay ningún versículo en pantalla.';
+  }
+}
+
+saveVerseBtn.addEventListener('click', ()=>{
+  const text = inpVerseText.value.trim();
+  const reference = inpVerseRef.value.trim();
+  if(!text){ inpVerseText.focus(); return; }
+  if(!reference){ inpVerseRef.focus(); return; }
+  if(saveVerse({ text, reference })){
+    window.location.href = 'anuncios.html';
+  }
+});
+
+clearVerseBtn.addEventListener('click', ()=>{
+  clearVerse();
+  inpVerseText.value = '';
+  inpVerseRef.value = '';
+  renderVerseStatus();
+});
+
+/* ================= INIT ================= */
+renderAnnList();
+renderVideoList();
+renderBirthdayList();
+renderVerseStatus();
+</script>
+</body>
+</html>
