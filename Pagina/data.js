@@ -7,11 +7,12 @@ const STORAGE_KEY_VERSE = 'tv_versiculo_v1';
 const VIDEOS_SEEDED_KEY = 'tv_videos_seeded_v1';
 const MAX_IMG_WIDTH = 1400;
 const JPEG_QUALITY = 0.8;
+const ANNOUNCEMENT_MAX_AGE_DAYS = 7; // los anuncios se borran solos pasados estos días
 
 // Videos con los que arranca la lista la primera vez que se abre la página en un navegador nuevo (ej. el TV).
 const DEFAULT_VIDEOS = [
   { url:'https://youtu.be/l_6e2-ZsKpE?si=xs_rXl1LzbHlgNFi', title:'' },
-  { url:'https://youtu.be/Aq6t9gFY9bk', title:'' },
+  { url:'https://youtu.be/NaAGVg86AG0?si=Nuscp4WmvAojRjit', title:'' },
 ];
 //creamos la función para cargar y guardar la lista de anuncios y videos en el localStorage del navegador.
 function loadList(key){
@@ -29,7 +30,21 @@ function saveList(key, list, itemLabel){
     return false;
   }
 }
-const loadAnnouncements = ()=> loadList(STORAGE_KEY);
+// El id de cada anuncio es su fecha de creación (Date.now()); lo usamos para saber su antigüedad
+// sin necesitar un campo extra. Los vencidos se descartan y la lista limpia se re-guarda.
+function pruneExpiredAnnouncements(list){
+  const cutoff = Date.now() - ANNOUNCEMENT_MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
+  const fresh = list.filter(a => a.id >= cutoff);
+  if(fresh.length !== list.length) saveList(STORAGE_KEY, fresh, 'anuncio con imagen');
+  return fresh;
+}
+// Devuelve los días que le quedan a un anuncio antes de expirar
+function announcementDaysLeft(id){
+  const ageMs = Date.now() - id;
+  const daysLeft = ANNOUNCEMENT_MAX_AGE_DAYS - Math.floor(ageMs / (24 * 60 * 60 * 1000));
+  return Math.max(daysLeft, 0);
+}
+const loadAnnouncements = ()=> pruneExpiredAnnouncements(loadList(STORAGE_KEY));
 const saveAnnouncements = (list)=> saveList(STORAGE_KEY, list, 'anuncio con imagen');
 const loadVideos = ()=> loadList(STORAGE_KEY_VIDEOS);
 const saveVideos = (list)=> saveList(STORAGE_KEY_VIDEOS, list, 'video');

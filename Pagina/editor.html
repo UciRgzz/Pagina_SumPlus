@@ -163,6 +163,7 @@ const clearBirthdayFormBtn = document.getElementById('clearBirthdayForm');
 let birthdays = loadBirthdays();
 
 /* ================= ANUNCIOS ================= */
+//variable para almacenar la imagen pedindg.
 inpFile.addEventListener('change', ()=>{
   const file = inpFile.files[0];
   if(!file) { pendingImage = null; thumbPreview.style.display='none'; return; }
@@ -173,6 +174,7 @@ inpFile.addEventListener('change', ()=>{
   });
 });
 
+//comprime la imagen seleccionada para que no ocupe demasiado espacio en el almacenamiento del navegador.
 function compressImage(file, callback){
   const reader = new FileReader();
   reader.onload = (e)=>{
@@ -232,6 +234,7 @@ function renderAnnList(){
         <div class="t">${escapeHtml(a.title)}</div>
         <div class="d">${escapeHtml(a.desc || 'Sin descripción')}</div>
       </div>
+      <span class="badge text-bg-secondary" title="Se borra solo pasado este tiempo">${announcementDaysLeft(a.id) === 0 ? 'Vence hoy' : `Vence en ${announcementDaysLeft(a.id)}d`}</span>
       <button class="btn btn-outline-danger btn-sm" data-id="${a.id}" title="Eliminar"><i class="bi bi-trash3"></i></button>
     `;
     wrap.appendChild(item);
