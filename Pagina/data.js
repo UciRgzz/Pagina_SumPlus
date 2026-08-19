@@ -9,7 +9,7 @@ const MAX_IMG_WIDTH = 1400;
 const JPEG_QUALITY = 0.8;
 const ANNOUNCEMENT_MAX_AGE_DAYS = 7; // los anuncios se borran solos pasados estos días
 
-// Videos con los que arranca la lista la primera vez que se abre la página en un navegador nuevo (ej. el TV).
+// Videos con los que arranca la lista la primera vez .
 const DEFAULT_VIDEOS = [
   { url:'https://youtu.be/l_6e2-ZsKpE?si=xs_rXl1LzbHlgNFi', title:'' },
   { url:'https://youtu.be/NaAGVg86AG0?si=Nuscp4WmvAojRjit', title:'' },

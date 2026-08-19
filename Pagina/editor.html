@@ -191,7 +191,7 @@ function compressImage(file, callback){
       ctx.drawImage(img, 0, 0, width, height);
       callback(canvas.toDataURL('image/jpeg', JPEG_QUALITY));
     };
-    img.src = e.target.result;
+    img.src = e.target.result;  
   };
   reader.readAsDataURL(file);
 }
