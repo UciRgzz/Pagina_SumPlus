@@ -93,22 +93,9 @@ function formatEventDate(dateStr){
   return `${d} de ${BIRTHDAY_MONTH_NAMES[m - 1]}`;
 }
 
-// ¿Cae este cumpleaños (mes/día) dentro de la semana actual (lunes a domingo)?
-function isBirthdayInCurrentWeek(month, day){
-  const now = new Date();
-  const mondayOffset = (now.getDay() + 6) % 7; // Domingo=0..Sábado=6 -> lunes=0
-  const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - mondayOffset);
-  monday.setHours(0,0,0,0);
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-  sunday.setHours(23,59,59,999);
-
-  const years = new Set([monday.getFullYear(), sunday.getFullYear()]);
-  for(const y of years){
-    const candidate = new Date(y, month - 1, day);
-    if(candidate >= monday && candidate <= sunday) return true;
-  }
-  return false;
+// ¿Cae este cumpleaños dentro del mes actual? (coincide con el título "Cumpleaños del mes")
+function isBirthdayInCurrentMonth(month){
+  return month === (new Date().getMonth() + 1);
 }
 
 function extractYouTubeId(url){

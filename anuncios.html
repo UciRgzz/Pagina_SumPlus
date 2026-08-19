@@ -184,7 +184,9 @@ function versePanelHtml(verse){
 function buildInfoPanels(){
   const panels = [];
 
-  const thisMonthBirthdays = loadBirthdays().filter(b => isBirthdayInCurrentWeek(b.month, b.day));
+  const thisMonthBirthdays = loadBirthdays()
+    .filter(b => isBirthdayInCurrentMonth(b.month))
+    .sort((a,b)=> a.day - b.day);
   if(thisMonthBirthdays.length > 0){
     panels.push({ key:'birthdays', html: birthdayPanelHtml(thisMonthBirthdays) });
   }
