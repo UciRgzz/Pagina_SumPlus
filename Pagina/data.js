@@ -76,6 +76,23 @@ function initials(name){
 
 const BIRTHDAY_MONTH_NAMES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 
+//función para calcular los días que faltan para un evento a partir de su fecha (en formato YYYY-MM-DD)
+function daysUntilEvent(dateStr){
+  if(!dateStr) return null;
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const eventDay = new Date(y, m - 1, d);
+  eventDay.setHours(0,0,0,0);
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  return Math.round((eventDay - today) / (24 * 60 * 60 * 1000));
+}
+
+function formatEventDate(dateStr){
+  if(!dateStr) return '';
+  const [, m, d] = dateStr.split('-').map(Number);
+  return `${d} de ${BIRTHDAY_MONTH_NAMES[m - 1]}`;
+}
+
 // ¿Cae este cumpleaños (mes/día) dentro de la semana actual (lunes a domingo)?
 function isBirthdayInCurrentWeek(month, day){
   const now = new Date();

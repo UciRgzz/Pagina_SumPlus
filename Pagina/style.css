@@ -296,14 +296,21 @@ body{
 }
 :root{ --border-blue:#3E7BFA; }
 
-.slide-img-wrap{
+/* Envoltura sin recorte: existe solo para que la pastilla de evento se pueda asomar
+   fuera del marco de la imagen sin que .slide-img-wrap (que sí recorta) se la coma. */
+.slide-img-frame{
+  position:relative;
   flex:1 1 auto;
   min-height:0;
   max-width:100%;
   max-height:70vh;
+  margin-bottom:26px;
+}
+.slide-img-wrap{
+  width:100%;
+  height:100%;
   border-radius:var(--radius);
   overflow:hidden;
-  margin-bottom:26px;
   border:3px solid transparent;
   background-image:linear-gradient(var(--bg-panel), var(--bg-panel)), conic-gradient(from var(--border-angle), var(--amber), var(--border-blue), var(--amber));
   background-origin:border-box;
@@ -318,6 +325,23 @@ body{
   width:100%;
   height:100%;
   object-fit:contain;
+}
+/* Pastilla "Faltan X días" para anuncios con fecha de evento: se asoma justo en la esquina
+   superior izquierda del marco (mitad adentro, mitad afuera), o se ve fija arriba del
+   título si el anuncio no tiene imagen. */
+.slide-event-badge{
+  position:absolute; top:-14px; left:-14px; z-index:2;
+  background:var(--amber); color:#1A1204;
+  font-weight:800; font-size:16px;
+  padding:8px 18px; border-radius:999px;
+  box-shadow:0 8px 20px rgba(3,9,24,0.35);
+}
+.slide-event-badge.past{
+  background:var(--bg-panel-2); color:var(--text-mid);
+}
+.slide > .slide-event-badge{
+  position:static;
+  margin-bottom:18px;
 }
 .slide-title{
   font-size:52px; font-weight:800; color:var(--text-hi);

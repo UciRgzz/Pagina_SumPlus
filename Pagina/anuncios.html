@@ -172,9 +172,10 @@ function birthdayPanelHtml(list){
   `;
 }
 
+// Esta función genera el HTML del panel de versículo del día.
 function versePanelHtml(verse){
   return `
-    <div class="verse-title"><i class="bi bi-book-half"></i> Palabra del día</div>
+    <div class="verse-title"><i class="bi bi-book-half"></i> Versículo del día</div>
     <div class="verse-text">${escapeHtml(verse.text)}</div>
     <div class="verse-ref">${escapeHtml(verse.reference)}</div>
   `;
@@ -290,6 +291,18 @@ function initYouTubePlayer(elementId, videoId, slideIndex){
 }
 
 /* ================= CARRUSEL ================= */
+// Pastilla de cuenta regresiva para anuncios con fecha de evento;  si el anuncio no tiene fecha.
+function eventBadgeHtml(dateStr){
+  const days = daysUntilEvent(dateStr);
+  if(days === null) return '';
+  let label = `Faltan ${days} días`;
+  let cls = '';
+  if(days === 1) label = 'Mañana';
+  else if(days === 0) label = 'Hoy';
+  else if(days < 0){ label = 'Ya pasó'; cls = ' past'; }
+  return `<div class="slide-event-badge${cls}">${label}</div>`;
+}
+
 function buildPlaylist(){
   const list = [];
   const maxLen = Math.max(announcements.length, videos.length);
@@ -343,7 +356,7 @@ function renderCarousel(){
       slide.dataset.index = i;
       slide.innerHTML = `
         <div class="slide-eyebrow">Anuncio ${aCount} de ${announcements.length}</div>
-        ${a.image ? `<div class="slide-img-wrap"><img src="${a.image}" alt="${escapeHtml(a.title)}"></div>` : ''}
+        ${a.image ? `<div class="slide-img-frame">${eventBadgeHtml(a.eventDate)}<div class="slide-img-wrap"><img src="${a.image}" alt="${escapeHtml(a.title)}"></div></div>` : eventBadgeHtml(a.eventDate)}
         <div class="slide-title">${escapeHtml(a.title)}</div>
         ${a.desc ? `<div class="slide-desc">${escapeHtml(a.desc)}</div>` : ''}
       `;
@@ -351,7 +364,7 @@ function renderCarousel(){
 
       if(a.image){
         // Ajusta el marco a la proporción real de la foto para que no quede espacio vacío alrededor.
-        const wrapEl = slide.querySelector('.slide-img-wrap');
+        const wrapEl = slide.querySelector('.slide-img-frame');
         const imgEl = wrapEl.querySelector('img');
         const applyRatio = ()=>{
           if(imgEl.naturalWidth && imgEl.naturalHeight){
@@ -407,7 +420,7 @@ function showSlide(idx){
     carouselTimer = setInterval(goToNext, SLIDE_DURATION);
   }
 }
-
+// Avanza al siguiente slide, o vuelve al primero si estamos en el último.
 function goToNext(){
   if(playlist.length === 0) return;
   showSlide((currentSlide + 1) % playlist.length);

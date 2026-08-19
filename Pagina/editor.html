@@ -37,6 +37,11 @@
           <textarea class="form-control" id="inpDesc" rows="2" placeholder="Detalles del anuncio..."></textarea>
         </div>
         <div class="col-12">
+          <label class="form-label" for="inpEventDate">Fecha del evento (opcional)</label>
+          <input type="date" class="form-control" id="inpEventDate">
+          <div class="form-text">Solo si es un evento con fecha; en la pantalla se mostrará cuántos días faltan.</div>
+        </div>
+        <div class="col-12">
           <label class="form-label" for="inpFile">Imagen o archivo (opcional)</label>
           <div class="d-flex align-items-center gap-3">
             <input type="file" class="form-control" id="inpFile" accept="image/*">
@@ -148,6 +153,7 @@ let pendingImage = null;
 
 const inpTitle = document.getElementById('inpTitle');
 const inpDesc = document.getElementById('inpDesc');
+const inpEventDate = document.getElementById('inpEventDate');
 const inpFile = document.getElementById('inpFile');
 const thumbPreview = document.getElementById('thumbPreview');
 const addAnnBtn = document.getElementById('addAnn');
@@ -199,6 +205,7 @@ function compressImage(file, callback){
 function resetForm(){
   inpTitle.value = '';
   inpDesc.value = '';
+  inpEventDate.value = '';
   inpFile.value = '';
   pendingImage = null;
   thumbPreview.style.display = 'none';
@@ -208,7 +215,7 @@ clearFormBtn.addEventListener('click', resetForm);
 addAnnBtn.addEventListener('click', ()=>{
   const title = inpTitle.value.trim();
   if(!title){ inpTitle.focus(); return; }
-  const newAnn = { title, desc: inpDesc.value.trim(), image: pendingImage || null, id: Date.now() };
+  const newAnn = { title, desc: inpDesc.value.trim(), eventDate: inpEventDate.value || null, image: pendingImage || null, id: Date.now() };
   announcements.push(newAnn);
   if(saveAnnouncements(announcements)){
     window.location.href = 'anuncios.html';
@@ -231,7 +238,7 @@ function renderAnnList(){
     item.innerHTML = `
       ${a.image ? `<img class="item-thumb" src="${a.image}" alt="">` : `<div class="item-thumb-empty"><i class="bi bi-image"></i></div>`}
       <div class="item-info">
-        <div class="t">${escapeHtml(a.title)}</div>
+        <div class="t">${escapeHtml(a.title)}${a.eventDate ? ` <span class="text-muted fw-normal">· ${formatEventDate(a.eventDate)}</span>` : ''}</div>
         <div class="d">${escapeHtml(a.desc || 'Sin descripción')}</div>
       </div>
       <span class="badge text-bg-secondary" title="Se borra solo pasado este tiempo">${announcementDaysLeft(a.id) === 0 ? 'Vence hoy' : `Vence en ${announcementDaysLeft(a.id)}d`}</span>
