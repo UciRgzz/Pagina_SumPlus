@@ -123,11 +123,12 @@
           <input type="text" class="form-control" id="inpVerseRef" placeholder="Ej. Filipenses 4:13">
         </div>
         <div class="col-12 d-flex gap-2 justify-content-end">
-          <button class="btn btn-outline-secondary" id="clearVerseBtn">Quitar de la pantalla</button>
+          <button class="btn btn-outline-secondary" id="clearVerseBtn">Volver al automático</button>
           <button class="btn btn-primary" id="saveVerseBtn"><i class="bi bi-check-lg me-1"></i>Guardar</button>
         </div>
         <div class="col-12">
-          <div class="form-text" id="verseStatus">Actualmente no hay ningún versículo en pantalla.</div>
+          <div class="form-text">Si no guardas nada aquí, la pantalla muestra automáticamente un versículo distinto cada día (sin que tengas que hacer nada).</div>
+          <div class="form-text" id="verseStatus">Actualmente no hay ningún versículo manual — se está mostrando el automático del día.</div>
         </div>
       </div>
       </div>
@@ -379,9 +380,9 @@ function renderVerseStatus(){
   if(verse){
     inpVerseText.value = verse.text;
     inpVerseRef.value = verse.reference;
-    verseStatus.textContent = `Actualmente en pantalla: "${verse.text}" — ${verse.reference}`;
+    verseStatus.textContent = `Actualmente en pantalla (manual): "${verse.text}" — ${verse.reference}`;
   }else{
-    verseStatus.textContent = 'Actualmente no hay ningún versículo en pantalla.';
+    verseStatus.textContent = 'Actualmente no hay ningún versículo manual — se está mostrando el automático del día.';
   }
 }
 

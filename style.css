@@ -61,6 +61,7 @@ body{
   width:100vw;height:100vh;
   display:flex;
   flex-direction:column;
+  transition:transform 6s ease-in-out; /* desplazamiento anti-quemado, imperceptible */
 }
 .stage-main{
   flex:1;
@@ -68,6 +69,25 @@ body{
   gap:28px;
   padding:28px 40px;
   min-height:0;
+}
+
+/* ---------- Pantalla en reposo (fuera de horario, anti-quemado) ---------- */
+.off-hours-overlay{
+  position:fixed; inset:0;
+  background:#000;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 2s ease;
+  z-index:9999;
+}
+.off-hours-overlay.active{
+  opacity:1;
+  pointer-events:auto;
+}
+#offHoursCanvas{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  display:block;
 }
 
 /* ---------- Encabezado de la pantalla ---------- */

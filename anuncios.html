@@ -12,7 +12,7 @@
 </head>
 <body class="tv-screen">
 
-<div class="stage">
+<div class="stage" id="stageRoot">
   <div class="page-header">
     <div class="page-header-text">
       <div class="page-header-title">AVISO<span>S</span> INTERNOS</div>
@@ -70,6 +70,10 @@
 <button class="skip-toggle" id="skipToggle" title="Saltar al siguiente (o flecha derecha)">
   <i class="bi bi-skip-forward-fill"></i>
 </button>
+
+<div class="off-hours-overlay" id="offHoursOverlay">
+  <canvas id="offHoursCanvas"></canvas>
+</div>
 
 <script src="data.js"></script>
 <script>
@@ -191,7 +195,7 @@ function buildInfoPanels(){
     panels.push({ key:'birthdays', html: birthdayPanelHtml(thisMonthBirthdays) });
   }
 
-  const verse = loadVerse();
+  const verse = loadDisplayVerse();
   if(verse){
     panels.push({ key:'verse', html: versePanelHtml(verse) });
   }
@@ -238,6 +242,14 @@ function refreshInfoPanels(){
 refreshInfoPanels();
 updateWeather();
 setInterval(updateWeather, WEATHER_REFRESH);
+
+// Versículo automático: se trae de la API solo si no hay uno cacheado para hoy,
+// y se revisa cada rato para detectar el cambio de día sin recargar la pantalla.
+const AUTO_VERSE_CHECK = 30 * 60 * 1000; // cada 30 min
+refreshAutoVerse().then(changed => { if(changed && !loadVerse()) refreshInfoPanels(); });
+setInterval(() => {
+  refreshAutoVerse().then(changed => { if(changed && !loadVerse()) refreshInfoPanels(); });
+}, AUTO_VERSE_CHECK);
 
 let announcements = loadAnnouncements();
 let videos = seedDefaultVideosIfNeeded(loadVideos());
@@ -446,13 +458,141 @@ window.addEventListener('storage', (e)=>{
     videos = loadVideos();
     renderCarousel();
   }
-  if(e.key === STORAGE_KEY_BIRTHDAYS || e.key === STORAGE_KEY_VERSE){
+  if(e.key === STORAGE_KEY_BIRTHDAYS || e.key === STORAGE_KEY_VERSE || e.key === STORAGE_KEY_AUTO_VERSE){
     refreshInfoPanels();
   }
 });
 
-/* ================= INIT ================= */
-renderCarousel();
+/* ================= CUIDADO DE PANTALLA (anti-quemado) =================
+   1) Todo el "stage" se desplaza unos px cada rato, de forma imperceptible,
+      para que los elementos fijos (reloj, header, sidebar) no golpeen
+      siempre los mismos píxeles.
+   2) Fuera del horario activo se pone una pantalla oscura y se pausa
+      el carrusel/los videos, para no tener contenido brillante fijo
+      cuando no hay nadie mirando. */
+const PIXEL_SHIFT_INTERVAL = 5 * 60 * 1000; // cada 5 min
+const PIXEL_SHIFT_OFFSETS = [
+  {x:0,y:0}, {x:3,y:1}, {x:-2,y:2}, {x:1,y:-3}, {x:-3,y:-1}, {x:2,y:-2}, {x:-1,y:3},
+];
+let pixelShiftIndex = 0;
+function applyPixelShift(){
+  const offset = PIXEL_SHIFT_OFFSETS[pixelShiftIndex % PIXEL_SHIFT_OFFSETS.length];
+  pixelShiftIndex++;
+  document.getElementById('stageRoot').style.transform = `translate(${offset.x}px, ${offset.y}px)`;
+}
+setInterval(applyPixelShift, PIXEL_SHIFT_INTERVAL);
+applyPixelShift();
+
+/* ---- Protector de pantalla animado (burbujas) que se muestra durante el reposo ---- */
+let bubbleCanvas = null, bubbleCtx = null, bubbles = [], bubbleTimer = null;
+
+function resizeBubbleCanvas(){
+  if(!bubbleCanvas) return;
+  bubbleCanvas.width = window.innerWidth;
+  bubbleCanvas.height = window.innerHeight;
+}
+
+function createBubbles(){
+  bubbles = Array.from({ length: 18 }, () => ({
+    x: Math.random() * window.innerWidth,
+    y: Math.random() * (window.innerHeight + 200) - 100, // ya distribuidas en pantalla desde el inicio
+    r: 18 + Math.random() * 42,
+    vy: 0.15 + Math.random() * 0.35,
+    vx: (Math.random() - 0.5) * 0.25,
+    hue: Math.random() < 0.5 ? '255,201,77' : '94,234,212', // ámbar / turquesa de la marca
+    opacity: 0.10 + Math.random() * 0.18,
+  }));
+}
+
+function drawBubblesFrame(){
+  bubbleCtx.clearRect(0, 0, bubbleCanvas.width, bubbleCanvas.height);
+  bubbles.forEach(b=>{
+    b.y -= b.vy;
+    b.x += b.vx;
+    if(b.y + b.r < 0){ b.y = bubbleCanvas.height + b.r; b.x = Math.random() * bubbleCanvas.width; }
+    if(b.x - b.r > bubbleCanvas.width) b.x = -b.r;
+    if(b.x + b.r < 0) b.x = bubbleCanvas.width + b.r;
+
+    // Relleno: se mantiene sólido hasta cerca del borde, sin difuminarse desde el centro.
+    const fill = bubbleCtx.createRadialGradient(b.x, b.y, b.r * 0.15, b.x, b.y, b.r);
+    fill.addColorStop(0, `rgba(${b.hue},${b.opacity})`);
+    fill.addColorStop(0.75, `rgba(${b.hue},${b.opacity})`);
+    fill.addColorStop(1, `rgba(${b.hue},0)`);
+    bubbleCtx.fillStyle = fill;
+    bubbleCtx.beginPath();
+    bubbleCtx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+    bubbleCtx.fill();
+
+    // Borde definido tipo burbuja de jabón.
+    bubbleCtx.strokeStyle = `rgba(${b.hue},${Math.min(b.opacity * 2.2, 0.65)})`;
+    bubbleCtx.lineWidth = 1.5;
+    bubbleCtx.stroke();
+
+    // Brillo (highlight) para dar sensación de vidrio/burbuja.
+    bubbleCtx.beginPath();
+    bubbleCtx.ellipse(b.x - b.r*0.35, b.y - b.r*0.35, b.r*0.18, b.r*0.12, -0.6, 0, Math.PI * 2);
+    bubbleCtx.fillStyle = `rgba(255,255,255,${Math.min(b.opacity * 1.6, 0.4)})`;
+    bubbleCtx.fill();
+  });
+}
+// Inicia el protector de pantalla de burbujas, creando el canvas y los elementos si es la primera vez.
+function startBubbleScreensaver(){
+  if(!bubbleCanvas){
+    bubbleCanvas = document.getElementById('offHoursCanvas');
+    bubbleCtx = bubbleCanvas.getContext('2d');
+    window.addEventListener('resize', resizeBubbleCanvas);
+  }
+  resizeBubbleCanvas();
+  createBubbles();
+  if(bubbleTimer) clearInterval(bubbleTimer);
+  bubbleTimer = setInterval(drawBubblesFrame, 1000 / 30); // 30 fps, liviano para hardware modesto
+}
+
+function stopBubbleScreensaver(){
+  if(bubbleTimer){ clearInterval(bubbleTimer); bubbleTimer = null; }
+}
+
+// Horario activo (hay gente en la oficina): mañana y tarde, con la hora de comida en medio.
+const ACTIVE_RANGES = [
+  { start: 8 * 60,        end: 12 * 60 + 30 }, // 8:00 am - 12:30 pm
+  { start: 14 * 60 + 30,  end: 18 * 60 },       // 2:30 pm - 6:00 pm
+];
+let offHoursActive = null; // null = aún no se ha decidido (primer chequeo tras cargar la página)
+
+function isWithinActiveHours(){
+  const fmt = new Intl.DateTimeFormat('en-US', { timeZone: TIMEZONES.local.tz, hour:'2-digit', minute:'2-digit', hourCycle:'h23' });
+  const parts = Object.fromEntries(fmt.formatToParts(new Date()).map(p=>[p.type,p.value]));
+  const minutesNow = Number(parts.hour) * 60 + Number(parts.minute);
+  return ACTIVE_RANGES.some(r => minutesNow >= r.start && minutesNow < r.end);
+}
+
+function enterOffHours(){
+  if(offHoursActive === true) return;
+  offHoursActive = true;
+  document.getElementById('offHoursOverlay').classList.add('active');
+  if(carouselTimer){ clearInterval(carouselTimer); carouselTimer = null; }
+  Object.values(ytPlayers).forEach(p=>{ try{ if(typeof p.pauseVideo === 'function') p.pauseVideo(); }catch(e){} });
+  startBubbleScreensaver();
+}
+
+function exitOffHours(){
+  if(offHoursActive === false) return;
+  offHoursActive = false;
+  document.getElementById('offHoursOverlay').classList.remove('active');
+  stopBubbleScreensaver();
+  renderCarousel();
+}
+
+function checkActiveHours(){
+  if(isWithinActiveHours()) exitOffHours();
+  else enterOffHours();
+}
+setInterval(checkActiveHours, 60 * 1000);
+checkActiveHours();
+
+/* Recarga la página cada hora para limpiar memoria y evitar que el reproductor
+   de YouTube o el carrusel se queden en un estado raro tras horas prendidos. */
+setTimeout(()=> location.reload(), 60 * 60 * 1000);
 </script>
 </body>
 </html>

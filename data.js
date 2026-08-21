@@ -70,6 +70,93 @@ function clearVerse(){
   localStorage.removeItem(STORAGE_KEY_VERSE);
 }
 
+/* ================= VERSÍCULO AUTOMÁTICO DEL DÍA =================
+   Si no hay un versículo manual guardado (arriba), se muestra uno de esta lista
+   elegido automáticamente según el día del año, y se trae el texto de una API
+   pública de la Biblia (Versión Biblia Libre) para no tener que cargarlo a mano. */
+const STORAGE_KEY_AUTO_VERSE = 'tv_versiculo_auto_v1';
+const BIBLE_API_VERSION = 'es-vbl';
+
+const VERSE_REFERENCES = [
+  { book:'salmos', chapter:23, verse:1, ref:'Salmos 23:1' },
+  { book:'proverbios', chapter:3, verse:5, ref:'Proverbios 3:5' },
+  { book:'isaías', chapter:41, verse:10, ref:'Isaías 41:10' },
+  { book:'romanos', chapter:8, verse:28, ref:'Romanos 8:28' },
+  { book:'josué', chapter:1, verse:9, ref:'Josué 1:9' },
+  { book:'mateo', chapter:6, verse:33, ref:'Mateo 6:33' },
+  { book:'1corintios', chapter:13, verse:4, ref:'1 Corintios 13:4' },
+  { book:'gálatas', chapter:5, verse:22, ref:'Gálatas 5:22' },
+  { book:'jeremías', chapter:29, verse:11, ref:'Jeremías 29:11' },
+  { book:'2timoteo', chapter:1, verse:7, ref:'2 Timoteo 1:7' },
+  { book:'santiago', chapter:1, verse:5, ref:'Santiago 1:5' },
+  { book:'salmos', chapter:46, verse:1, ref:'Salmos 46:1' },
+  { book:'filipenses', chapter:4, verse:13, ref:'Filipenses 4:13' },
+  { book:'filipenses', chapter:4, verse:6, ref:'Filipenses 4:6' },
+  { book:'proverbios', chapter:16, verse:3, ref:'Proverbios 16:3' },
+  { book:'isaías', chapter:40, verse:31, ref:'Isaías 40:31' },
+  { book:'mateo', chapter:11, verse:28, ref:'Mateo 11:28' },
+  { book:'juan', chapter:14, verse:27, ref:'Juan 14:27' },
+  { book:'romanos', chapter:12, verse:2, ref:'Romanos 12:2' },
+  { book:'efesios', chapter:2, verse:8, ref:'Efesios 2:8' },
+  { book:'hebreos', chapter:11, verse:1, ref:'Hebreos 11:1' },
+  { book:'1corintios', chapter:10, verse:13, ref:'1 Corintios 10:13' },
+  { book:'salmos', chapter:91, verse:1, ref:'Salmos 91:1' },
+  { book:'deuteronomio', chapter:31, verse:6, ref:'Deuteronomio 31:6' },
+  { book:'lucas', chapter:1, verse:37, ref:'Lucas 1:37' },
+  { book:'marcos', chapter:11, verse:24, ref:'Marcos 11:24' },
+  { book:'colosenses', chapter:3, verse:23, ref:'Colosenses 3:23' },
+  { book:'proverbios', chapter:22, verse:6, ref:'Proverbios 22:6' },
+  { book:'números', chapter:6, verse:24, ref:'Números 6:24' },
+  { book:'génesis', chapter:1, verse:1, ref:'Génesis 1:1' },
+  { book:'1juan', chapter:4, verse:19, ref:'1 Juan 4:19' },
+  { book:'efesios', chapter:4, verse:32, ref:'Efesios 4:32' },
+  { book:'salmos', chapter:37, verse:4, ref:'Salmos 37:4' },
+];
+
+function todayKey(){
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+}
+
+function pickDailyReference(){
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  const dayOfYear = Math.floor((now - start) / 86400000);
+  return VERSE_REFERENCES[dayOfYear % VERSE_REFERENCES.length];
+}
+
+// Verso manual (si existe) tiene prioridad; si no, el automático ya cacheado para hoy.
+function loadDisplayVerse(){
+  const manual = loadVerse();
+  if(manual) return manual;
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY_AUTO_VERSE);
+    if(!raw) return null;
+    const cached = JSON.parse(raw);
+    return cached.date === todayKey() ? { text: cached.text, reference: cached.reference } : null;
+  }catch(e){ return null; }
+}
+
+// Trae de la API el versículo del día si aún no está cacheado para hoy.
+async function refreshAutoVerse(){
+  const raw = localStorage.getItem(STORAGE_KEY_AUTO_VERSE);
+  let cached = null;
+  try{ cached = raw ? JSON.parse(raw) : null; }catch(e){}
+  if(cached && cached.date === todayKey()) return false;
+
+  const picked = pickDailyReference();
+  try{
+    const url = `https://cdn.jsdelivr.net/gh/wldeh/bible-api/bibles/${BIBLE_API_VERSION}/books/${encodeURIComponent(picked.book)}/chapters/${picked.chapter}/verses/${picked.verse}.json`;
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('verse http error');
+    const data = await res.json();
+    localStorage.setItem(STORAGE_KEY_AUTO_VERSE, JSON.stringify({ text: data.text.trim(), reference: picked.ref, date: todayKey() }));
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+
 function initials(name){
   return (name || '').trim().split(/\s+/).slice(0,2).map(p=>p[0]?.toUpperCase() || '').join('');
 }
