@@ -184,12 +184,25 @@ body{
   margin-bottom:10px;
 }
 .clocks-time .secs{ font-size:0.4em; color:var(--pink); margin-left:8px; vertical-align:0.2em; }
+.clocks-time .ampm{
+  font-size:0.28em; font-weight:700; letter-spacing:0.5px;
+  color:rgba(255,255,255,0.55);
+  margin-left:6px; vertical-align:0.6em;
+}
 
+.world-clocks-viewport{
+  overflow:hidden;
+  margin-bottom:10px;
+}
 .world-clocks{
   display:grid; grid-template-columns:repeat(3, 1fr);
   gap:8px;
-  margin-bottom:10px;
+  transition:transform 0.45s ease, opacity 0.4s ease;
 }
+/* Cambio de grupo de ciudades: las 6 actuales se van deslizando a la derecha
+   y, cuando ya no se ven, las nuevas 6 entran deslizándose desde la izquierda. */
+.world-clocks.wc-slide-out{ transform:translateX(100%); opacity:0; }
+.world-clocks.wc-slide-in{ transform:translateX(-100%); opacity:0; transition:none; }
 .world-clock-item{
   display:flex; flex-direction:column; gap:3px;
   background:rgba(255,255,255,0.06);
@@ -202,6 +215,11 @@ body{
 }
 .world-clock-item .hour{
   font-size:15px; color:#FFFFFF; font-weight:700;
+}
+.world-clock-item .hour .ampm{
+  font-size:0.65em; font-weight:600; letter-spacing:0.3px;
+  color:rgba(255,255,255,0.5);
+  margin-left:3px;
 }
 
 /* ---------- SIDEBAR: cumpleaños y versículo (tarjetas fijas independientes) ---------- */

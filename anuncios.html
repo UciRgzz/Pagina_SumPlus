@@ -48,13 +48,15 @@
         </div>
         <div class="clocks-time" id="clockLocal">--:--<span class="secs">--</span></div>
 
-        <div class="world-clocks">
-          <div class="world-clock-item"><span class="city">Tijuana</span><span class="hour" id="clockTijuana">--:--</span></div>
-          <div class="world-clock-item"><span class="city">Cd. de México</span><span class="hour" id="clockCDMX">--:--</span></div>
-          <div class="world-clock-item"><span class="city">New York</span><span class="hour" id="clockNY">--:--</span></div>
-          <div class="world-clock-item"><span class="city">Londres</span><span class="hour" id="clockLondon">--:--</span></div>
-          <div class="world-clock-item"><span class="city">París</span><span class="hour" id="clockParis">--:--</span></div>
-          <div class="world-clock-item"><span class="city">Pekín</span><span class="hour" id="clockBeijing">--:--</span></div>
+        <div class="world-clocks-viewport">
+          <div class="world-clocks" id="worldClocks">
+            <div class="world-clock-item"><span class="city" id="city0">--</span><span class="hour" id="hour0">--:--</span></div>
+            <div class="world-clock-item"><span class="city" id="city1">--</span><span class="hour" id="hour1">--:--</span></div>
+            <div class="world-clock-item"><span class="city" id="city2">--</span><span class="hour" id="hour2">--:--</span></div>
+            <div class="world-clock-item"><span class="city" id="city3">--</span><span class="hour" id="hour3">--:--</span></div>
+            <div class="world-clock-item"><span class="city" id="city4">--</span><span class="hour" id="hour4">--:--</span></div>
+            <div class="world-clock-item"><span class="city" id="city5">--</span><span class="hour" id="hour5">--:--</span></div>
+          </div>
         </div>
 
         <div class="weather-top" id="weatherCard">
@@ -98,14 +100,36 @@ const TIMEZONES = {
 const SLIDE_DURATION = 10000; // m/s por anuncio
 
 // Relojes de referencia mundial que se muestran debajo de la hora local.
-const WORLD_CLOCKS = [
-  { tz:'America/Tijuana',      el:'clockTijuana' },
-  { tz:'America/Mexico_City',  el:'clockCDMX' },
-  { tz:'America/New_York',     el:'clockNY' },
-  { tz:'Europe/London',        el:'clockLondon' },
-  { tz:'Europe/Paris',         el:'clockParis' },
-  { tz:'Asia/Shanghai',        el:'clockBeijing' },
+// Dos grupos de 6 que se van alternando solos cada minuto (ver updateClocks).
+const WORLD_CLOCK_GROUPS = [
+  [
+    { city:'Tijuana',       tz:'America/Tijuana' },
+    { city:'Cd. de México', tz:'America/Mexico_City' },
+    { city:'New York',      tz:'America/New_York' },
+    { city:'Londres',       tz:'Europe/London' },
+    { city:'París',         tz:'Europe/Paris' },
+    { city:'Pekín',         tz:'Asia/Shanghai' },
+  ],
+  [
+    { city:'Los Ángeles', tz:'America/Los_Angeles' },
+    { city:'Chicago',     tz:'America/Chicago' },
+    { city:'Toronto',     tz:'America/Toronto' },
+    { city:'São Paulo',   tz:'America/Sao_Paulo' },
+    { city:'Dubái',       tz:'Asia/Dubai' },
+    { city:'Tokio',       tz:'Asia/Tokyo' },
+  ],
 ];
+let worldClockGroupIndex = null; // para saber cuándo cambia y disparar la animación de deslizamiento
+
+// Pinta hora + AM/PM de las 6 ciudades del grupo indicado en las casillas cityN/hourN.
+function renderWorldClockGroup(idx, now){
+  WORLD_CLOCK_GROUPS[idx].forEach((w, i) => {
+    const fmt = new Intl.DateTimeFormat('en-US', { timeZone: w.tz, hour:'numeric', minute:'2-digit', hour12:true });
+    const p = Object.fromEntries(fmt.formatToParts(now).map(x=>[x.type,x.value]));
+    document.getElementById(`city${i}`).textContent = w.city;
+    document.getElementById(`hour${i}`).innerHTML = `${p.hour}:${p.minute}<span class="ampm">${p.dayPeriod}</span>`;
+  });
+}
 
 // Número de semana ISO-8601 de una fecha (lunes = inicio de semana).
 function getWeekNumber(date){
@@ -120,10 +144,10 @@ function getWeekNumber(date){
 function updateClocks(){
   const now = new Date();
 
-  // Reloj local grande (con segundos)
-  const localFmt = new Intl.DateTimeFormat('es-MX', { timeZone: TIMEZONES.local.tz, hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false });
+  // Reloj local grande (12h, con AM/PM chiquito y segundos)
+  const localFmt = new Intl.DateTimeFormat('en-US', { timeZone: TIMEZONES.local.tz, hour:'numeric', minute:'2-digit', second:'2-digit', hour12:true });
   const parts = Object.fromEntries(localFmt.formatToParts(now).map(p=>[p.type,p.value]));
-  document.getElementById('clockLocal').innerHTML = `${parts.hour}:${parts.minute}<span class="secs">${parts.second}</span>`;
+  document.getElementById('clockLocal').innerHTML = `${parts.hour}:${parts.minute}<span class="ampm">${parts.dayPeriod}</span><span class="secs">${parts.second}</span>`;
 
   const dateFmt = new Intl.DateTimeFormat('es-MX', { timeZone: TIMEZONES.local.tz, weekday:'long', day:'numeric', month:'long' });
   const ymdFmt = new Intl.DateTimeFormat('en-CA', { timeZone: TIMEZONES.local.tz, year:'numeric', month:'2-digit', day:'2-digit' });
@@ -131,10 +155,22 @@ function updateClocks(){
   const week = getWeekNumber(new Date(y, m - 1, d));
   document.getElementById('dateLocal').textContent = `${dateFmt.format(now)}, Semana ${week}`;
 
-  // Relojes de referencia (solo hora:minuto)
-  for(const w of WORLD_CLOCKS){
-    const fmt = new Intl.DateTimeFormat('es-MX', { timeZone: w.tz, hour:'2-digit', minute:'2-digit', hour12:false });
-    document.getElementById(w.el).textContent = fmt.format(now);
+  // Relojes de referencia (hora:minuto, 12h con AM/PM chiquito).
+  // Cada minuto se alterna entre los dos grupos de ciudades de WORLD_CLOCK_GROUPS.
+  const groupIndex = Math.floor(now.getTime() / 60000) % WORLD_CLOCK_GROUPS.length;
+  if(groupIndex !== worldClockGroupIndex){
+    worldClockGroupIndex = groupIndex;
+    const worldClocksEl = document.getElementById('worldClocks');
+    worldClocksEl.classList.add('wc-slide-out'); // las 6 actuales se deslizan a la derecha y desaparecen
+    setTimeout(() => {
+      renderWorldClockGroup(groupIndex, new Date());
+      worldClocksEl.classList.remove('wc-slide-out');
+      worldClocksEl.classList.add('wc-slide-in'); // aparecen ya colocadas a la izquierda, sin animar
+      void worldClocksEl.offsetWidth; // fuerza reflow para poder animar el siguiente cambio
+      worldClocksEl.classList.remove('wc-slide-in'); // y ahora sí entran deslizándose a su lugar
+    }, 450);
+  } else {
+    renderWorldClockGroup(groupIndex, now);
   }
 }
 setInterval(updateClocks, 1000);
@@ -406,7 +442,6 @@ function renderCarousel(){
 }
 
 // Muestra el slide en el índice dado, pausando cualquier video que se esté reproduciendo
-//  y reiniciando el temporizador del carrusel.
 function showSlide(idx){
   const slides = document.querySelectorAll('.slide');
   const dots = document.querySelectorAll('.dot');
