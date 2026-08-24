@@ -436,7 +436,7 @@ body{
 .dot.active{ background:var(--pink); transform:scale(1.25); }
 
 /* ---------- Botones flotantes (discretos) ---------- */
-.edit-toggle, .skip-toggle{
+.edit-toggle, .skip-toggle, .screensaver-toggle{
   position:fixed; bottom:16px;
   width:38px; height:38px;
   border-radius:50%;
@@ -454,8 +454,9 @@ body{
 }
 .edit-toggle{ right:16px; }
 .skip-toggle{ left:16px; }
-.edit-toggle:hover, .skip-toggle:hover{ opacity:1; color:var(--pink); }
-.edit-toggle i, .skip-toggle i{ font-size:16px; }
+.screensaver-toggle{ top:64px; right:40px; bottom:auto; left:auto; z-index:10000; } /* debajo del logo SunPlus; por encima del overlay de burbujas (z-index 9999) para poder apagarlo */
+.edit-toggle:hover, .skip-toggle:hover, .screensaver-toggle:hover{ opacity:1; color:var(--pink); }
+.edit-toggle i, .skip-toggle i, .screensaver-toggle i{ font-size:16px; }
 
 /* ================= BOOTSTRAP: retema de componentes ================= */
 .card{

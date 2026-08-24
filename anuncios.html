@@ -81,6 +81,9 @@
 <button class="skip-toggle" id="skipToggle" title="Saltar al siguiente (o flecha derecha)">
   <i class="bi bi-skip-forward-fill"></i>
 </button>
+<button class="screensaver-toggle" id="screensaverToggle" title="Activar protector de pantalla">
+  <i class="bi bi-moon-stars-fill"></i>
+</button>
 
 <div class="off-hours-overlay" id="offHoursOverlay">
   <canvas id="offHoursCanvas"></canvas>
@@ -549,21 +552,23 @@ function stopBubbleScreensaver(){
   if(bubbleTimer){ clearInterval(bubbleTimer); bubbleTimer = null; }
 }
 
-// Horario activo (hay gente en la oficina): mañana y tarde, con la hora de comida en medio.
-const ACTIVE_RANGES = [
-  { start: 8 * 60,        end: 12 * 60 + 30 }, // 8:00 am - 12:30 pm
-  { start: 14 * 60 + 30,  end: 18 * 60 },       // 2:30 pm - 6:00 pm
-];
-let offHoursActive = null; // null = aún no se ha decidido (primer chequeo tras cargar la página)
+let offHoursActive = false; // solo cambia con el botón luna/sol, no hay horario automático
 
-function isWithinActiveHours(){
-  const fmt = new Intl.DateTimeFormat('en-US', { timeZone: TIMEZONES.local.tz, hour:'2-digit', minute:'2-digit', hourCycle:'h23' });
-  const parts = Object.fromEntries(fmt.formatToParts(new Date()).map(p=>[p.type,p.value]));
-  const minutesNow = Number(parts.hour) * 60 + Number(parts.minute);
-  return ACTIVE_RANGES.some(r => minutesNow >= r.start && minutesNow < r.end);
+/* ---- Botón manual: luna para activar el protector, sol para volver al contenido ---- */
+const screensaverToggle = document.getElementById('screensaverToggle');
+function updateScreensaverToggleIcon(active){
+  screensaverToggle.innerHTML = active
+    ? '<i class="bi bi-sun-fill"></i>'
+    : '<i class="bi bi-moon-stars-fill"></i>';
+  screensaverToggle.title = active ? 'Volver a mostrar contenido' : 'Activar protector de pantalla';
 }
-
+screensaverToggle.addEventListener('click', () => {
+  if(offHoursActive) exitOffHours();
+  else enterOffHours();
+});
+//funcion de encendido del protector de pantalla
 function enterOffHours(){
+  updateScreensaverToggleIcon(true);
   if(offHoursActive === true) return;
   offHoursActive = true;
   document.getElementById('offHoursOverlay').classList.add('active');
@@ -571,24 +576,17 @@ function enterOffHours(){
   Object.values(ytPlayers).forEach(p=>{ try{ if(typeof p.pauseVideo === 'function') p.pauseVideo(); }catch(e){} });
   startBubbleScreensaver();
 }
-
+//funcion de apagado del protector de pantalla
 function exitOffHours(){
+  updateScreensaverToggleIcon(false);
   if(offHoursActive === false) return;
   offHoursActive = false;
   document.getElementById('offHoursOverlay').classList.remove('active');
   stopBubbleScreensaver();
   renderCarousel();
 }
+renderCarousel(); // primer dibujo del carrusel al cargar la página
 
-function checkActiveHours(){
-  if(isWithinActiveHours()) exitOffHours();
-  else enterOffHours();
-}
-setInterval(checkActiveHours, 60 * 1000);
-checkActiveHours();
-
-/* Recarga la página cada hora para limpiar memoria y evitar que el reproductor
-   de YouTube o el carrusel se queden en un estado raro tras horas prendidos. */
 setTimeout(()=> location.reload(), 60 * 60 * 1000);
 </script>
 </body>
