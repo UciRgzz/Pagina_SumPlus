@@ -3,10 +3,10 @@
   --bg-panel:#FFFFFF;
   --bg-panel-2:#EEF1F9;
   --line:#DCE1EF;
-  --amber:#F0A93B;
-  --amber-dim:#B87F22;
-  --teal:#49C7B8;
-  --teal-dim:#16897C;
+  --pink:#CC2D88;
+  --pink-dim:#9C2569;
+  --orange:#E2592A;
+  --orange-dim:#A83F1C;
   --text-hi:#161B2E;
   --text-mid:#57607D;
   --text-low:#8791AC;
@@ -21,8 +21,8 @@
   --bs-border-color: var(--line);
   --bs-tertiary-bg: var(--bg-panel-2);
   --bs-font-sans-serif: 'Manrope', sans-serif;
-  --bs-link-color: var(--amber);
-  --bs-link-hover-color: #F7B85A;
+  --bs-link-color: var(--pink);
+  --bs-link-hover-color: #E2578F;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{
@@ -34,23 +34,23 @@ html,body{
 }
 body{
   background:
-    radial-gradient(ellipse 1200px 700px at 15% 0%, rgba(240,169,59,0.10), transparent 60%),
-    radial-gradient(ellipse 1000px 600px at 100% 100%, rgba(73,199,184,0.08), transparent 60%),
+    radial-gradient(ellipse 1200px 700px at 15% 0%, rgba(204,45,136,0.10), transparent 60%),
+    radial-gradient(ellipse 1000px 600px at 100% 100%, rgba(226,89,42,0.08), transparent 60%),
     var(--bg-deep);
 }
 
 /* ---------- Pantalla del TV: fondo de marca + paleta clara sobre color ---------- */
 .tv-screen{
   --text-hi:#FFFFFF;
-  --text-mid:rgba(255,255,255,0.82);
-  --text-low:rgba(255,255,255,0.60);
-  --line:rgba(255,255,255,0.30);
+  --text-mid:rgba(255, 255, 255, 0.82);
+  --text-low:rgba(255, 255, 255, 0.6);
+  --line:rgba(255, 255, 255, 0.3);
   --bg-panel:rgba(255,255,255,0.12);
   --bg-panel-2:rgba(255,255,255,0.18);
-  --amber:#FFC94D;
-  --amber-dim:#FFB020;
-  --teal-dim:#5EEAD4;
-  background:linear-gradient(160deg, #0A1A33 0%, #123058 50%, #1B4A7A 100%);
+  --pink:#fdd63c; /*sol*/
+  --pink-dim:#f8f3f6;
+  --orange-dim:#FFB37A;
+  background:linear-gradient(90deg, #CC2D88 0%, #E2592A 100%); /* colores principales de fondo */
 }
 
 .mono{ font-family:'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; }
@@ -67,7 +67,7 @@ body{
   flex:1;
   display:flex;
   gap:28px;
-  padding:28px 40px;
+  padding:12px 40px 18px;
   min-height:0;
 }
 
@@ -95,7 +95,7 @@ body{
   display:flex;
   align-items:flex-start;
   justify-content:space-between;
-  padding:20px 40px 0 40px;
+  padding:14px 40px 0 40px;
 }
 .page-header-title{
   font-family:'Anton', 'Manrope', sans-serif;
@@ -107,16 +107,15 @@ body{
   color:var(--text-hi);
   text-shadow:0 6px 20px rgba(2,8,22,0.35);
 }
-.page-header-title span{ color:var(--amber); }
+.page-header-title span{ color:var(--pink); }
 .page-header-rule{
   width:64px; height:5px; border-radius:3px;
-  background:linear-gradient(90deg, var(--amber), var(--teal-dim));
+  background:linear-gradient(90deg, var(--pink), var(--orange-dim));
   margin:10px 0 8px;
 }
 .page-header-sub{
   font-size:14px; color:var(--text-mid); font-weight:600; letter-spacing:0.3px;
 }
-
 /* ---------- Tarjetas de vidrio compartidas (reloj / clima) ---------- */
 .sidebar-card{
   border-radius:20px;
@@ -125,7 +124,8 @@ body{
   backdrop-filter:blur(18px);
   -webkit-backdrop-filter:blur(18px);
   box-shadow:0 16px 44px rgba(4,10,26,0.30);
-  padding:20px 24px;
+  padding:12px 16px;
+  flex-shrink:0;
 }
 
 /* ---------- SIDEBAR: reloj + clima ---------- */
@@ -134,12 +134,18 @@ body{
   flex-shrink:0;
   display:flex;
   flex-direction:column;
-  gap:14px;
+  gap:6px;
+  min-height:0;
+  max-height:100%;
+  overflow-y:auto;
+  scrollbar-width:none;
 }
+.sidebar::-webkit-scrollbar{ display:none; }
 .brand-mark{
   display:flex; align-items:center; justify-content:flex-end; gap:10px;
   padding:0 4px;
-  transform:scale(1.4);
+  flex-shrink:0;
+  transform:scale(1.3);
   transform-origin:right center;
 }
 /* ---------- Marca de la app (logo + nombre) ---------- */
@@ -148,126 +154,133 @@ body{
 }
 .brand-mark-dots i{
   width:7px; height:7px; border-radius:50%; display:block;
-  background:#D9456B;
+  background:#fbf5f6;/*circulos del logo*/
 }
 .brand-mark-dots i:nth-child(1),
 .brand-mark-dots i:nth-child(3),
 .brand-mark-dots i:nth-child(7),
 .brand-mark-dots i:nth-child(9){
-  background:#F3C4D3;
+  background:#cb4972; /*circulos del logo*/
 }
 .brand-mark-text{
   font-weight:800; font-size:20px; letter-spacing:0.2px;
-  color:#D9456B;
+  color:#f7f3f4; /*letras del logo*/
 }
-.tz-label{
-  display:flex; align-items:center; gap:10px;
-  font-size:13px; letter-spacing:3px; text-transform:uppercase;
-  color:var(--amber-dim); font-weight:700; margin-bottom:6px;
+.clocks-card{
+  background:rgba(10,8,12,0.55);
+  border-color:rgba(255,255,255,0.10);
 }
-.tz-dot{width:7px;height:7px;border-radius:50%;background:var(--amber); box-shadow:0 0 10px rgba(255,201,77,0.6);}
-.sidebar-clock .time{
-  font-size:54px; font-weight:700; line-height:1; letter-spacing:1px;
-  color:var(--text-hi);
-  text-shadow:0 6px 24px rgba(2,8,22,0.25);
+.clocks-header{
+  display:flex; align-items:center; gap:8px;
+  font-size:13px; color:rgba(255,255,255,0.75); font-weight:600;
+  margin-bottom:6px;
 }
-.sidebar-clock .time .secs{
-  color:var(--amber-dim); font-size:0.48em; font-weight:700; margin-left:8px;
-  vertical-align:0.14em;
+.clocks-header i{ font-size:15px; }
+.clocks-date{ text-transform:capitalize; }
+.clocks-time{
+  font-size:44px; font-weight:800; line-height:1; letter-spacing:0.5px;
+  color:var(--orange);
+  font-variant-numeric:tabular-nums;
+  margin-bottom:10px;
 }
-.sidebar-clock .date{
-  margin-top:8px; font-size:16px; color:var(--text-mid); font-weight:600;
-  text-transform:capitalize;
+.clocks-time .secs{ font-size:0.4em; color:var(--pink); margin-left:8px; vertical-align:0.2em; }
+
+.world-clocks{
+  display:grid; grid-template-columns:repeat(3, 1fr);
+  gap:8px;
+  margin-bottom:10px;
+}
+.world-clock-item{
+  display:flex; flex-direction:column; gap:3px;
+  background:rgba(255,255,255,0.06);
+  border-radius:10px;
+  padding:6px 8px;
+}
+.world-clock-item .city{
+  font-size:10.5px; color:rgba(255,255,255,0.55); font-weight:600;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.world-clock-item .hour{
+  font-size:15px; color:#FFFFFF; font-weight:700;
 }
 
-/* ---------- SIDEBAR: panel rotativo (clima / cumpleaños / palabra del día) ---------- */
-.sidebar-info{
+/* ---------- SIDEBAR: cumpleaños y versículo (tarjetas fijas independientes) ---------- */
+.birthday-card, .verse-card{
   display:flex; flex-direction:column;
-  min-height:150px;
   animation:info-fade 0.4s ease;
+  padding:12px 16px;
 }
 @keyframes info-fade{
   from{ opacity:0; transform:translateY(4px); }
   to{ opacity:1; transform:translateY(0); }
 }
-.info-loading{
-  font-size:15px; color:var(--text-mid); font-weight:600;
-  display:flex; align-items:center; flex:1;
-}
-.info-dots{
-  display:flex; justify-content:center; gap:8px;
-  margin-top:2px;
-}
-.info-dot{
-  width:6px; height:6px; border-radius:50%;
-  background:var(--line);
-}
-.info-dot.active{ background:var(--amber); }
 
 .weather-top{
-  display:flex; align-items:center; gap:16px;
+  display:flex; align-items:center; gap:14px;
+  padding-top:10px;
+  border-top:1px solid rgba(255,255,255,0.12);
 }
-.weather-icon{ font-size:44px; color:var(--amber); }
-.weather-temp{ font-size:46px; font-weight:700; color:var(--text-hi); }
-.weather-desc{ margin-top:8px; font-size:16px; color:var(--text-mid); font-weight:600; }
+.weather-icon{ font-size:30px; color:#FFC94D; flex-shrink:0; }
+.weather-main{ flex:1; min-width:0; }
+.weather-temp{ font-size:26px; font-weight:700; color:var(--text-hi); line-height:1.1; }
+.weather-desc{ font-size:13px; color:var(--text-mid); font-weight:600; }
 .weather-range{
-  margin-top:12px; padding-top:12px; border-top:1px solid var(--line);
-  display:flex; gap:24px;
-  font-size:14px; color:var(--text-mid);
+  display:flex; flex-direction:column; gap:2px;
+  font-size:12px; color:var(--text-mid); text-align:right; flex-shrink:0;
 }
 .weather-range b{ color:var(--text-hi); font-weight:700; }
 
 .birthday-title{
   display:flex; align-items:center; gap:10px;
   font-size:13px; letter-spacing:1.5px; text-transform:uppercase;
-  color:var(--amber-dim); font-weight:700; margin-bottom:12px;
+  color:var(--pink-dim); font-weight:700; margin-bottom:8px;
 }
 .birthday-list{
-  display:flex; flex-direction:column; gap:12px;
-  max-height:180px; overflow-y:auto;
+  display:flex; flex-direction:column; gap:6px;
+  max-height:160px; overflow-y:auto;
 }
 .birthday-item{
-  display:flex; align-items:center; gap:14px;
+  display:flex; align-items:center; gap:10px;
 }
 .birthday-avatar{
-  width:40px; height:40px; flex-shrink:0;
+  width:30px; height:30px; flex-shrink:0;
   border-radius:50%;
-  background:var(--amber);
-  color:#1A1204;
+  background:var(--pink);
+  color:#FFFFFF;
   display:flex; align-items:center; justify-content:center;
-  font-weight:800; font-size:14px;
+  font-weight:800; font-size:12px;
 }
 .birthday-info{ min-width:0; }
 .birthday-name{
-  font-size:16px; font-weight:600; color:var(--text-hi);
+  font-size:14px; font-weight:600; color:var(--text-hi);
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 .birthday-date{
-  font-size:13px; color:var(--text-mid); font-weight:500;
-  margin-top:2px;
+  font-size:11px; color:var(--text-mid); font-weight:500;
+  margin-top:0;
 }
 
 .verse-title{
   display:flex; align-items:center; gap:10px;
   font-size:13px; letter-spacing:1.5px; text-transform:uppercase;
-  color:var(--amber-dim); font-weight:700; margin-bottom:12px;
+  color:var(--pink-dim); font-weight:700; margin-bottom:8px;
 }
 .verse-text{
   font-family:Georgia, 'Times New Roman', serif;
   font-style:italic;
   font-weight:700;
-  font-size:18px;
-  line-height:1.4;
+  font-size:16px;
+  line-height:1.32;
   color:var(--text-hi);
   display:-webkit-box;
   -webkit-box-orient:vertical;
-  -webkit-line-clamp:5;
-  line-clamp:5;
+  -webkit-line-clamp:4;
+  line-clamp:4;
   overflow:hidden;
 }
 .verse-ref{
-  margin-top:10px;
-  font-size:14px; font-weight:600; color:var(--teal-dim);
+  margin-top:8px;
+  font-size:13px; font-weight:600; color:var(--orange-dim);
 }
 
 /* ---------- HERO: carrusel ---------- */
@@ -304,7 +317,7 @@ body{
 }
 .slide-eyebrow{
   font-size:14px; letter-spacing:3px; text-transform:uppercase;
-  color:var(--teal-dim); font-weight:700; margin-bottom:18px;
+  color:var(--orange-dim); font-weight:700; margin-bottom:18px;
 }
 @property --border-angle{
   syntax:'<angle>';
@@ -314,7 +327,7 @@ body{
 @keyframes border-spin{
   to{ --border-angle:360deg; }
 }
-:root{ --border-blue:#3E7BFA; }
+:root{ --border-blue:#E2592A; }
 
 /* Envoltura sin recorte: existe solo para que la pastilla de evento se pueda asomar
    fuera del marco de la imagen sin que .slide-img-wrap (que sí recorta) se la coma. */
@@ -332,7 +345,7 @@ body{
   border-radius:var(--radius);
   overflow:hidden;
   border:3px solid transparent;
-  background-image:linear-gradient(var(--bg-panel), var(--bg-panel)), conic-gradient(from var(--border-angle), var(--amber), var(--border-blue), var(--amber));
+  background-image:linear-gradient(var(--bg-panel), var(--bg-panel)), conic-gradient(from var(--border-angle), var(--pink), var(--border-blue), var(--pink));
   background-origin:border-box;
   background-clip:padding-box, border-box;
   animation:border-spin 2s linear infinite; /* girar el borde */
@@ -351,7 +364,7 @@ body{
    título si el anuncio no tiene imagen. */
 .slide-event-badge{
   position:absolute; top:-14px; left:-14px; z-index:2;
-  background:var(--amber); color:#1A1204;
+  background:var(--pink); color:#FFFFFF;
   font-weight:800; font-size:16px;
   padding:8px 18px; border-radius:999px;
   box-shadow:0 8px 20px rgba(3,9,24,0.35);
@@ -384,7 +397,7 @@ body{
   border-radius:var(--radius);
   overflow:hidden;
   border:3px solid transparent;
-  background-image:linear-gradient(#000, #000), conic-gradient(from var(--border-angle), var(--amber), var(--border-blue), var(--amber));
+  background-image:linear-gradient(#000, #000), conic-gradient(from var(--border-angle), var(--pink), var(--border-blue), var(--pink));
   background-origin:border-box;
   background-clip:padding-box, border-box;
   animation:border-spin 2s linear infinite; /* girar el borde */
@@ -420,7 +433,7 @@ body{
   background:var(--line);
   transition:background 0.3s ease, transform 0.3s ease;
 }
-.dot.active{ background:var(--amber); transform:scale(1.25); }
+.dot.active{ background:var(--pink); transform:scale(1.25); }
 
 /* ---------- Botones flotantes (discretos) ---------- */
 .edit-toggle, .skip-toggle{
@@ -441,7 +454,7 @@ body{
 }
 .edit-toggle{ right:16px; }
 .skip-toggle{ left:16px; }
-.edit-toggle:hover, .skip-toggle:hover{ opacity:1; color:var(--amber); }
+.edit-toggle:hover, .skip-toggle:hover{ opacity:1; color:var(--pink); }
 .edit-toggle i, .skip-toggle i{ font-size:16px; }
 
 /* ================= BOOTSTRAP: retema de componentes ================= */
@@ -462,9 +475,9 @@ body{
 }
 .form-control:focus, .form-select:focus{
   background-color:var(--bg-panel-2);
-  border-color:var(--amber);
+  border-color:var(--pink);
   color:var(--text-hi);
-  box-shadow:0 0 0 0.2rem rgba(240,169,59,0.25);
+  box-shadow:0 0 0 0.2rem rgba(204,45,136,0.25);
 }
 .form-control::placeholder{ color:var(--text-low); opacity:1; }
 .form-control[type=file]{ color:var(--text-mid); font-size:13px; }
@@ -475,9 +488,9 @@ body{
 
 .btn{ font-weight:700; border-radius:9px; }
 .btn-primary{
-  --bs-btn-color:#1A1204; --bs-btn-bg:var(--amber); --bs-btn-border-color:var(--amber);
-  --bs-btn-hover-color:#1A1204; --bs-btn-hover-bg:#F7B85A; --bs-btn-hover-border-color:#F7B85A;
-  --bs-btn-active-color:#1A1204; --bs-btn-active-bg:#F7B85A; --bs-btn-active-border-color:#F7B85A;
+  --bs-btn-color:#FFFFFF; --bs-btn-bg:var(--pink); --bs-btn-border-color:var(--pink);
+  --bs-btn-hover-color:#FFFFFF; --bs-btn-hover-bg:var(--orange); --bs-btn-hover-border-color:var(--orange);
+  --bs-btn-active-color:#FFFFFF; --bs-btn-active-bg:var(--orange); --bs-btn-active-border-color:var(--orange);
 }
 .btn-outline-secondary{
   --bs-btn-color:var(--text-mid); --bs-btn-border-color:var(--line);
@@ -501,7 +514,7 @@ body{
   overflow:auto;
   height:auto;
   min-height:100vh;
-  background:linear-gradient(160deg, #0A1A33 0%, #123058 50%, #1B4A7A 100%);
+  background:linear-gradient(90deg, #CC2D88 0%, #E2592A 100%);
 }
 .editor-page{
   max-width:960px;
@@ -511,7 +524,7 @@ body{
   color:rgba(255,255,255,0.82); font-size:13px; font-weight:700; text-decoration:none;
   margin-bottom:18px;
 }
-.back-link:hover{ color:var(--amber); }
+.back-link:hover{ color:#f9e65a; }
 .editor-tabs{
   display:flex; gap:8px; flex-wrap:wrap;
   margin-bottom:28px; padding-bottom:20px;
@@ -531,7 +544,7 @@ body{
 }
 .editor-tab:hover{ color:var(--text-hi); border-color:var(--text-mid); }
 .editor-tab.active{
-  background:var(--amber); color:#1A1204; border-color:var(--amber);
+  background:var(--pink); color:#FFFFFF; border-color:var(--pink);
 }
 
 .thumb-preview{ width:52px;height:52px;border-radius:8px;object-fit:cover;display:none;border:1px solid var(--line);}

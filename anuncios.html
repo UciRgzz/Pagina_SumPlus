@@ -41,26 +41,37 @@
     </div>
 
     <aside class="sidebar">
-      <div class="sidebar-card sidebar-clock">
-        <div class="tz-label"><span class="tz-dot"></span>Montemorelos, N.L.</div>
-        <div class="time mono" id="clockLocal">--:--<span class="secs">--</span></div>
-        <div class="date" id="dateLocal">--</div>
-      </div>
+      <div class="sidebar-card clocks-card">
+        <div class="clocks-header">
+          <i class="bi bi-clock"></i>
+          <div class="clocks-date" id="dateLocal">--</div>
+        </div>
+        <div class="clocks-time" id="clockLocal">--:--<span class="secs">--</span></div>
 
-      <div class="sidebar-card sidebar-weather" id="weatherCard">
-        <div class="weather-top">
+        <div class="world-clocks">
+          <div class="world-clock-item"><span class="city">Tijuana</span><span class="hour" id="clockTijuana">--:--</span></div>
+          <div class="world-clock-item"><span class="city">Cd. de México</span><span class="hour" id="clockCDMX">--:--</span></div>
+          <div class="world-clock-item"><span class="city">New York</span><span class="hour" id="clockNY">--:--</span></div>
+          <div class="world-clock-item"><span class="city">Londres</span><span class="hour" id="clockLondon">--:--</span></div>
+          <div class="world-clock-item"><span class="city">París</span><span class="hour" id="clockParis">--:--</span></div>
+          <div class="world-clock-item"><span class="city">Pekín</span><span class="hour" id="clockBeijing">--:--</span></div>
+        </div>
+
+        <div class="weather-top" id="weatherCard">
           <i class="bi bi-cloud-sun-fill weather-icon" id="weatherIcon"></i>
-          <div class="weather-temp" id="weatherTemp">--°</div>
-        </div>
-        <div class="weather-desc" id="weatherDesc">Cargando clima…</div>
-        <div class="weather-range">
-          <span>Mín <b id="weatherMin">--°</b></span>
-          <span>Máx <b id="weatherMax">--°</b></span>
+          <div class="weather-main">
+            <div class="weather-temp" id="weatherTemp">--°</div>
+            <div class="weather-desc" id="weatherDesc">Cargando clima…</div>
+          </div>
+          <div class="weather-range">
+            <span>Mín <b id="weatherMin">--°</b></span>
+            <span>Máx <b id="weatherMax">--°</b></span>
+          </div>
         </div>
       </div>
 
-      <div class="sidebar-card sidebar-info" id="infoCard" style="display:none;"></div>
-      <div class="info-dots" id="infoDots"></div>
+      <div class="sidebar-card birthday-card" id="birthdayCard" style="display:none;"></div>
+      <div class="sidebar-card verse-card" id="verseCard" style="display:none;"></div>
     </aside>
   </div>
 </div>
@@ -83,6 +94,25 @@ const TIMEZONES = {
 };
 const SLIDE_DURATION = 10000; // m/s por anuncio
 
+// Relojes de referencia mundial que se muestran debajo de la hora local.
+const WORLD_CLOCKS = [
+  { tz:'America/Tijuana',      el:'clockTijuana' },
+  { tz:'America/Mexico_City',  el:'clockCDMX' },
+  { tz:'America/New_York',     el:'clockNY' },
+  { tz:'Europe/London',        el:'clockLondon' },
+  { tz:'Europe/Paris',         el:'clockParis' },
+  { tz:'Asia/Shanghai',        el:'clockBeijing' },
+];
+
+// Número de semana ISO-8601 de una fecha (lunes = inicio de semana).
+function getWeekNumber(date){
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+
 /* ================= RELOJES ================= */
 function updateClocks(){
   const now = new Date();
@@ -93,7 +123,16 @@ function updateClocks(){
   document.getElementById('clockLocal').innerHTML = `${parts.hour}:${parts.minute}<span class="secs">${parts.second}</span>`;
 
   const dateFmt = new Intl.DateTimeFormat('es-MX', { timeZone: TIMEZONES.local.tz, weekday:'long', day:'numeric', month:'long' });
-  document.getElementById('dateLocal').textContent = dateFmt.format(now);
+  const ymdFmt = new Intl.DateTimeFormat('en-CA', { timeZone: TIMEZONES.local.tz, year:'numeric', month:'2-digit', day:'2-digit' });
+  const [y, m, d] = ymdFmt.format(now).split('-').map(Number);
+  const week = getWeekNumber(new Date(y, m - 1, d));
+  document.getElementById('dateLocal').textContent = `${dateFmt.format(now)}, Semana ${week}`;
+
+  // Relojes de referencia (solo hora:minuto)
+  for(const w of WORLD_CLOCKS){
+    const fmt = new Intl.DateTimeFormat('es-MX', { timeZone: w.tz, hour:'2-digit', minute:'2-digit', hour12:false });
+    document.getElementById(w.el).textContent = fmt.format(now);
+  }
 }
 setInterval(updateClocks, 1000);
 updateClocks();
@@ -153,12 +192,6 @@ async function updateWeather(){
 /* ================= PANEL ROTATIVO: cumpleaños / palabra del día =================
    Comparten una sola tarjeta que va rotando entre ellos cuando ambos tienen contenido;
    si solo uno tiene contenido se queda fijo, y si ninguno tiene se oculta por completo. */
-const INFO_ROTATION = 8000; // m/s por panel
-let infoPanels = [];
-let infoIndex = 0;
-let infoTimer = null;
-
-
 function birthdayPanelHtml(list){
   return `
     <div class="birthday-title"><i class="bi bi-gift-fill"></i> Cumpleaños del mes</div>
@@ -185,57 +218,27 @@ function versePanelHtml(verse){
   `;
 }
 
-function buildInfoPanels(){
-  const panels = [];
-
+// Cumpleaños y versículo ahora son tarjetas independientes y fijas (ya no se turnan);
+// cada una se oculta sola si no tiene contenido que mostrar.
+function refreshInfoPanels(){
+  const birthdayCard = document.getElementById('birthdayCard');
   const thisMonthBirthdays = loadBirthdays()
     .filter(b => isBirthdayInCurrentMonth(b.month))
     .sort((a,b)=> a.day - b.day);
   if(thisMonthBirthdays.length > 0){
-    panels.push({ key:'birthdays', html: birthdayPanelHtml(thisMonthBirthdays) });
+    birthdayCard.style.display = 'flex';
+    birthdayCard.innerHTML = birthdayPanelHtml(thisMonthBirthdays);
+  }else{
+    birthdayCard.style.display = 'none';
   }
 
+  const verseCard = document.getElementById('verseCard');
   const verse = loadDisplayVerse();
   if(verse){
-    panels.push({ key:'verse', html: versePanelHtml(verse) });
-  }
-
-  return panels;
-}
-
-function showInfoPanel(idx){
-  const panel = infoPanels[idx];
-  if(!panel) return;
-  document.getElementById('infoCard').innerHTML = panel.html;
-  document.querySelectorAll('#infoDots .info-dot').forEach((d,i)=> d.classList.toggle('active', i===idx));
-}
-
-function refreshInfoPanels(){
-  infoPanels = buildInfoPanels();
-  const card = document.getElementById('infoCard');
-  const dotsWrap = document.getElementById('infoDots');
-
-  if(infoPanels.length === 0){
-    card.style.display = 'none';
-    dotsWrap.innerHTML = '';
-    if(infoTimer){ clearInterval(infoTimer); infoTimer = null; }
-    return;
-  }
-  card.style.display = 'flex';
-
-  if(infoIndex >= infoPanels.length) infoIndex = 0;
-  dotsWrap.innerHTML = infoPanels.length > 1
-    ? infoPanels.map(()=> `<div class="info-dot"></div>`).join('')
-    : '';
-
-  showInfoPanel(infoIndex);
-
-  if(infoTimer){ clearInterval(infoTimer); infoTimer = null; }
-  if(infoPanels.length > 1){
-    infoTimer = setInterval(()=>{
-      infoIndex = (infoIndex + 1) % infoPanels.length;
-      showInfoPanel(infoIndex);
-    }, INFO_ROTATION);
+    verseCard.style.display = 'flex';
+    verseCard.innerHTML = versePanelHtml(verse);
+  }else{
+    verseCard.style.display = 'none';
   }
 }
 
@@ -463,13 +466,7 @@ window.addEventListener('storage', (e)=>{
   }
 });
 
-/* ================= CUIDADO DE PANTALLA (anti-quemado) =================
-   1) Todo el "stage" se desplaza unos px cada rato, de forma imperceptible,
-      para que los elementos fijos (reloj, header, sidebar) no golpeen
-      siempre los mismos píxeles.
-   2) Fuera del horario activo se pone una pantalla oscura y se pausa
-      el carrusel/los videos, para no tener contenido brillante fijo
-      cuando no hay nadie mirando. */
+/* ================= CUIDADO DE PANTALLA (anti-quemado) =================*/
 const PIXEL_SHIFT_INTERVAL = 5 * 60 * 1000; // cada 5 min
 const PIXEL_SHIFT_OFFSETS = [
   {x:0,y:0}, {x:3,y:1}, {x:-2,y:2}, {x:1,y:-3}, {x:-3,y:-1}, {x:2,y:-2}, {x:-1,y:3},
@@ -491,19 +488,19 @@ function resizeBubbleCanvas(){
   bubbleCanvas.width = window.innerWidth;
   bubbleCanvas.height = window.innerHeight;
 }
-
+// Crea un conjunto de burbujas con posiciones, tamaños y velocidades aleatorias.
 function createBubbles(){
   bubbles = Array.from({ length: 18 }, () => ({
     x: Math.random() * window.innerWidth,
-    y: Math.random() * (window.innerHeight + 200) - 100, // ya distribuidas en pantalla desde el inicio
+    y: Math.random() * (window.innerHeight + 200) - 100, 
     r: 18 + Math.random() * 42,
     vy: 0.15 + Math.random() * 0.35,
     vx: (Math.random() - 0.5) * 0.25,
-    hue: Math.random() < 0.5 ? '255,201,77' : '94,234,212', // ámbar / turquesa de la marca
+    hue: Math.random() < 0.5 ? '255,201,77' : '94,234,212', 
     opacity: 0.10 + Math.random() * 0.18,
   }));
 }
-
+// Dibuja un frame de animación de burbujas, moviéndolas y aplicando relleno, borde y brillo.
 function drawBubblesFrame(){
   bubbleCtx.clearRect(0, 0, bubbleCanvas.width, bubbleCanvas.height);
   bubbles.forEach(b=>{
