@@ -50,18 +50,15 @@
           <div class="clocks-date" id="dateLocal">--</div>
         </div>
         <div class="clocks-time" id="clockLocal">--:--<span class="secs">--</span></div>
+        <div class="clocks-location"><i class="bi bi-geo-alt-fill"></i> Montemorelos</div>
 
         <div class="world-clocks-viewport">
           <div class="world-clocks" id="worldClocks">
             <div class="world-clock-item"><span class="city" id="city0">--</span><span class="hour" id="hour0">--:--</span></div>
             <div class="world-clock-item"><span class="city" id="city1">--</span><span class="hour" id="hour1">--:--</span></div>
             <div class="world-clock-item"><span class="city" id="city2">--</span><span class="hour" id="hour2">--:--</span></div>
-            <div class="world-clock-item"><span class="city" id="city3">--</span><span class="hour" id="hour3">--:--</span></div>
-            <div class="world-clock-item"><span class="city" id="city4">--</span><span class="hour" id="hour4">--:--</span></div>
-            <div class="world-clock-item"><span class="city" id="city5">--</span><span class="hour" id="hour5">--:--</span></div>
           </div>
         </div>
-
         <div class="weather-top" id="weatherCard">
           <i class="bi bi-cloud-sun-fill weather-icon" id="weatherIcon"></i>
           <div class="weather-main">
@@ -100,28 +97,27 @@ const TIMEZONES = {
 const SLIDE_DURATION = 10000; // m/s por anuncio
 
 // Relojes de referencia mundial que se muestran debajo de la hora local.
-// Dos grupos de 6 que se van alternando solos cada minuto (ver updateClocks).
+// Tres grupos de 3 que se van alternando solos cada minuto.
 const WORLD_CLOCK_GROUPS = [
   [
-    { city:'Tijuana',       tz:'America/Tijuana' },
-    { city:'Cd. de México', tz:'America/Mexico_City' },
-    { city:'New York',      tz:'America/New_York' },
-    { city:'Londres',       tz:'Europe/London' },
-    { city:'París',         tz:'Europe/Paris' },
-    { city:'Pekín',         tz:'Asia/Shanghai' },
+    { city:'Montemorelos', tz:'America/Monterrey' },
+    { city:'Maryland',     tz:'America/New_York' },
+    { city:'Accra',        tz:'Africa/Accra' },
   ],
   [
-    { city:'Los Ángeles', tz:'America/Los_Angeles' },
-    { city:'Chicago',     tz:'America/Chicago' },
-    { city:'Toronto',     tz:'America/Toronto' },
-    { city:'São Paulo',   tz:'America/Sao_Paulo' },
-    { city:'Dubái',       tz:'Asia/Dubai' },
-    { city:'Tokio',       tz:'Asia/Tokyo' },
+    { city:'Abuja',    tz:'Africa/Lagos' },
+    { city:'Pretoria', tz:'Africa/Johannesburg' },
+    { city:'Kigali',   tz:'Africa/Kigali' },
+  ],
+  [
+    { city:'Nairobi',    tz:'Africa/Nairobi' },
+    { city:'Tamil Nadu', tz:'Asia/Kolkata' },
+    { city:'Silang',     tz:'Asia/Manila' },
   ],
 ];
-let worldClockGroupIndex = null; // para saber cuándo cambia y disparar la animación de deslizamiento
+let worldClockGroupIndex = null;
 
-// Pinta hora + AM/PM de las 6 ciudades del grupo indicado en las casillas cityN/hourN.
+// Pinta hora + AM/PM de las 3 ciudades del grupo indicado en las casillas cityN/hourN.
 function renderWorldClockGroup(idx, now){
   WORLD_CLOCK_GROUPS[idx].forEach((w, i) => {
     const fmt = new Intl.DateTimeFormat('en-US', { timeZone: w.tz, hour:'numeric', minute:'2-digit', hour12:true });
@@ -160,13 +156,13 @@ function updateClocks(){
   if(groupIndex !== worldClockGroupIndex){
     worldClockGroupIndex = groupIndex;
     const worldClocksEl = document.getElementById('worldClocks');
-    worldClocksEl.classList.add('wc-slide-out'); // las 6 actuales se deslizan a la derecha y desaparecen
+    worldClocksEl.classList.add('wc-slide-out');
     setTimeout(() => {
       renderWorldClockGroup(groupIndex, new Date());
       worldClocksEl.classList.remove('wc-slide-out');
-      worldClocksEl.classList.add('wc-slide-in'); // 
-      void worldClocksEl.offsetWidth; // fuerza reflow para poder animar el siguiente cambio
-      worldClocksEl.classList.remove('wc-slide-in'); // y ahora sí entran deslizándose a su lugar
+      worldClocksEl.classList.add('wc-slide-in');
+      void worldClocksEl.offsetWidth;
+      worldClocksEl.classList.remove('wc-slide-in');
     }, 450);
   } else {
     renderWorldClockGroup(groupIndex, now);
@@ -228,23 +224,23 @@ async function updateWeather(){
 }
 /* ================= PANEL ROTATIVO: cumpleaños / palabra del día ================= */
 function birthdayPanelHtml(list){
-  const shouldScroll = list.length > 1;
-  const items = shouldScroll ? list.concat(list) : list;
+  const birthdayItems = list.map(b => `
+    <div class="birthday-item">
+      <div class="birthday-avatar">
+        ${b.photo ? `<img src="${b.photo}" alt="${escapeHtml(b.name)}">` : escapeHtml(initials(b.name))}
+      </div>
+      <div class="birthday-info">
+        <div class="birthday-name">${escapeHtml(b.name)}</div>
+        <div class="birthday-date">${b.day} de ${BIRTHDAY_MONTH_NAMES[b.month - 1]} de ${new Date().getFullYear()}</div>
+      </div>
+    </div>
+  `).join('');
+
   return `
     <div class="birthday-title"><i class="bi bi-gift-fill"></i> Cumpleaños del mes</div>
-    <div class="birthday-marquee-wrap ${shouldScroll ? 'scrolling' : 'static'}">
-      <div class="birthday-marquee-track">
-        ${items.map((b, index) => `
-          <div class="birthday-item" key="${index}">
-            <div class="birthday-avatar ${b.photo ? 'has-photo' : ''}">
-              ${b.photo ? `<img src="${b.photo}" alt="${escapeHtml(b.name)}">` : escapeHtml(initials(b.name))}
-            </div>
-            <div class="birthday-info">
-              <div class="birthday-name">${escapeHtml(b.name)}</div>
-              <div class="birthday-date">${b.day} de ${BIRTHDAY_MONTH_NAMES[b.month - 1]} de ${new Date().getFullYear()}</div>
-            </div>
-          </div>
-        `).join('')}
+    <div class="birthday-list">
+      <div class="birthday-marquee-wrap scrolling">
+        <div class="birthday-marquee-track">${birthdayItems}${birthdayItems}</div>
       </div>
     </div>
   `;
