@@ -365,22 +365,27 @@ body{
   .page-header-sub{ font-size:13px; }
   .stage-main{ gap:18px; padding:8px 28px 10px; }
   .sidebar{ width:300px; gap:8px; }
-  .clocks-card{ padding:9px 10px 8px; }
-  .clocks-time{ font-size:32px; margin-bottom:7px; }
-  .world-clocks-viewport{ margin-bottom:6px; }
-  .world-clocks{ gap:5px; }
-  .world-clock-item{ min-height:42px; padding:4px 6px; }
-  .world-clock-item .city{ font-size:9px; }
-  .world-clock-item .hour{ font-size:13px; }
-  .weather-top{ gap:8px; padding-top:8px; }
-  .weather-icon{ font-size:22px; }
-  .weather-temp{ font-size:23px; }
-  .weather-desc{ font-size:11px; }
-  .weather-range{ font-size:10px; }
-  .birthday-card, .verse-card{ padding:8px 10px; }
-  .birthday-title, .verse-title{ margin-bottom:6px; }
-  .verse-text{ font-size:13px; line-height:1.2; -webkit-line-clamp:3; line-clamp:3; max-height:calc(13px * 1.2 * 3); }
-  .verse-ref{ margin-top:5px; font-size:10px; }
+
+  /* Las 3 tarjetas se reparten toda la altura disponible (en vez de solo
+     ocupar su contenido), así se ven más grandes y nunca hace falta scroll. */
+  .sidebar-card{ flex:1 1 0; min-height:0; }
+  .clocks-card{ flex-grow:2.2; padding:12px 12px 10px; display:flex; flex-direction:column; }
+  .birthday-card, .verse-card{ flex-grow:1; padding:10px 12px; justify-content:center; }
+
+  .clocks-time{ font-size:38px; margin-bottom:9px; }
+  .world-clocks-viewport{ flex:1; display:flex; margin-bottom:8px; }
+  .world-clocks{ width:100%; gap:6px; grid-template-rows:repeat(2, 1fr); }
+  .world-clock-item{ min-height:0; padding:6px 8px; }
+  .world-clock-item .city{ font-size:10.5px; }
+  .world-clock-item .hour{ font-size:16px; }
+  .weather-top{ gap:10px; padding-top:9px; }
+  .weather-icon{ font-size:26px; }
+  .weather-temp{ font-size:26px; }
+  .weather-desc{ font-size:12px; }
+  .weather-range{ font-size:11px; }
+  .birthday-title, .verse-title{ margin-bottom:8px; font-size:13px; }
+  .verse-text{ font-size:15px; line-height:1.26; -webkit-line-clamp:4; line-clamp:4; max-height:calc(15px * 1.26 * 4); }
+  .verse-ref{ margin-top:7px; font-size:11px; }
 }
 
 /* ---------- HERO: carrusel ---------- */
