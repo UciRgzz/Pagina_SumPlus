@@ -281,14 +281,14 @@ body{
 .birthday-marquee-wrap.scrolling .birthday-marquee-track{
   display:flex;
   width:max-content;
-  gap:12px;
+  gap:8px;
   animation: birthday-marquee 16s linear infinite;
   will-change:transform;
 }
 .birthday-item{
-  display:flex; align-items:center; gap:10px;
-  min-width:195px;
-  padding:8px 10px;
+  display:flex; align-items:center; gap:8px;
+  min-width:155px;
+  padding:6px 8px;
   border-radius:12px;
   background:rgba(255,255,255,0.08);
 }
@@ -308,12 +308,12 @@ body{
   width:100%; height:100%; object-fit:cover; display:block;
 }
 .birthday-avatar{
-  width:30px; height:30px; flex-shrink:0;
+  width:26px; height:26px; flex-shrink:0;
   border-radius:50%;
   background:var(--pink);
   color:#FFFFFF;
   display:flex; align-items:center; justify-content:center;
-  font-weight:800; font-size:12px;
+  font-weight:800; font-size:11px;
   overflow:hidden;
 }
 .birthday-avatar img{
@@ -321,11 +321,11 @@ body{
 }
 .birthday-info{ min-width:0; }
 .birthday-name{
-  font-size:14px; font-weight:600; color:var(--text-hi);
+  font-size:12px; font-weight:700; color:var(--text-hi);
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 .birthday-date{
-  font-size:11px; color:var(--text-mid); font-weight:500;
+  font-size:10px; color:var(--text-mid); font-weight:500;
   margin-top:0;
 }
 @keyframes birthday-marquee {
