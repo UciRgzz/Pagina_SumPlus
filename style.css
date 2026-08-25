@@ -101,20 +101,21 @@ body{
   font-family:'Anton', 'Manrope', sans-serif;
   font-weight:400;
   text-transform:uppercase;
-  font-size:46px;
-  line-height:0.92;
+  font-size:48px;
+  line-height:0.9;
   letter-spacing:1px;
   color:var(--text-hi);
   text-shadow:0 6px 20px rgba(2,8,22,0.35);
 }
 .page-header-title span{ color:var(--pink); }
 .page-header-rule{
-  width:64px; height:5px; border-radius:3px;
-  background:linear-gradient(90deg, var(--pink), var(--orange-dim));
-  margin:10px 0 8px;
+  width:72px; height:5px; border-radius:999px;
+  background:linear-gradient(90deg, rgba(255,255,255,0.92), rgba(255,255,255,0.32));
+  margin:12px 0 10px;
+  box-shadow:0 0 16px rgba(255,255,255,0.25);
 }
 .page-header-sub{
-  font-size:14px; color:var(--text-mid); font-weight:600; letter-spacing:0.3px;
+  font-size:15px; color:var(--text-mid); font-weight:600; letter-spacing:0.2px;
 }
 /* ---------- Tarjetas de vidrio compartidas (reloj / clima) ---------- */
 .sidebar-card{
@@ -134,7 +135,7 @@ body{
   flex-shrink:0;
   display:flex;
   flex-direction:column;
-  gap:6px;
+  gap:12px;
   min-height:0;
   max-height:100%;
   overflow-y:auto;
@@ -169,25 +170,34 @@ body{
 .clocks-card{
   background:rgba(10,8,12,0.55);
   border-color:rgba(255,255,255,0.10);
+  padding:14px 14px 12px;
+  box-shadow:0 16px 32px rgba(8,7,12,0.22);
 }
 .clocks-header{
   display:flex; align-items:center; gap:8px;
-  font-size:13px; color:rgba(255,255,255,0.75); font-weight:600;
-  margin-bottom:6px;
-}
-.clocks-header i{ font-size:15px; }
-.clocks-date{ text-transform:capitalize; }
-.clocks-time{
-  font-size:44px; font-weight:800; line-height:1; letter-spacing:0.5px;
-  color:var(--orange);
-  font-variant-numeric:tabular-nums;
+  font-size:11px; color:rgba(255,255,255,0.72); font-weight:700;
+  letter-spacing:0.12em; text-transform:uppercase;
   margin-bottom:10px;
 }
-.clocks-time .secs{ font-size:0.4em; color:var(--pink); margin-left:8px; vertical-align:0.2em; }
+.clocks-header i{ font-size:14px; }
+.clocks-date{
+  text-transform:capitalize;
+  letter-spacing:0.04em;
+}
+.clocks-time{
+  display:flex; align-items:flex-end; gap:6px; flex-wrap:wrap;
+  font-size:40px; font-weight:800; line-height:0.92; letter-spacing:0.4px;
+  color:var(--orange);
+  font-variant-numeric:tabular-nums;
+  margin-bottom:12px;
+}
+.clocks-time .secs{
+  font-size:0.4em; color:var(--pink); margin-left:2px; margin-bottom:4px;
+}
 .clocks-time .ampm{
-  font-size:0.28em; font-weight:700; letter-spacing:0.5px;
+  font-size:0.29em; font-weight:700; letter-spacing:0.5px;
   color:rgba(255,255,255,0.55);
-  margin-left:6px; vertical-align:0.6em;
+  margin-bottom:7px;
 }
 
 .world-clocks-viewport{
@@ -196,7 +206,7 @@ body{
 }
 .world-clocks{
   display:grid; grid-template-columns:repeat(3, 1fr);
-  gap:8px;
+  gap:10px;
   transition:transform 0.45s ease, opacity 0.4s ease;
 }
 /* Cambio de grupo de ciudades: las 6 actuales se van deslizando a la derecha
@@ -204,21 +214,25 @@ body{
 .world-clocks.wc-slide-out{ transform:translateX(100%); opacity:0; }
 .world-clocks.wc-slide-in{ transform:translateX(-100%); opacity:0; transition:none; }
 .world-clock-item{
-  display:flex; flex-direction:column; gap:3px;
+  display:flex; flex-direction:column; justify-content:center;
+  gap:3px;
+  min-height:62px;
   background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.08);
   border-radius:10px;
-  padding:6px 8px;
+  padding:8px 8px 7px;
 }
 .world-clock-item .city{
-  font-size:10.5px; color:rgba(255,255,255,0.55); font-weight:600;
+  font-size:10px; color:rgba(255,255,255,0.6); font-weight:600;
+  letter-spacing:0.02em;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 .world-clock-item .hour{
-  font-size:15px; color:#FFFFFF; font-weight:700;
+  font-size:15px; color:#FFFFFF; font-weight:700; line-height:1.1;
 }
 .world-clock-item .hour .ampm{
-  font-size:0.65em; font-weight:600; letter-spacing:0.3px;
-  color:rgba(255,255,255,0.5);
+  font-size:0.7em; font-weight:600; letter-spacing:0.3px;
+  color:rgba(255,255,255,0.52);
   margin-left:3px;
 }
 
@@ -226,7 +240,7 @@ body{
 .birthday-card, .verse-card{
   display:flex; flex-direction:column;
   animation:info-fade 0.4s ease;
-  padding:12px 16px;
+  padding:14px 16px;
 }
 @keyframes info-fade{
   from{ opacity:0; transform:translateY(4px); }
@@ -235,30 +249,58 @@ body{
 
 .weather-top{
   display:flex; align-items:center; gap:14px;
-  padding-top:10px;
+  padding-top:14px;
   border-top:1px solid rgba(255,255,255,0.12);
 }
 .weather-icon{ font-size:30px; color:#FFC94D; flex-shrink:0; }
 .weather-main{ flex:1; min-width:0; }
-.weather-temp{ font-size:26px; font-weight:700; color:var(--text-hi); line-height:1.1; }
+.weather-temp{ font-size:30px; font-weight:800; color:var(--text-hi); line-height:1.1; }
 .weather-desc{ font-size:13px; color:var(--text-mid); font-weight:600; }
 .weather-range{
-  display:flex; flex-direction:column; gap:2px;
+  display:flex; flex-direction:column; gap:3px;
   font-size:12px; color:var(--text-mid); text-align:right; flex-shrink:0;
 }
 .weather-range b{ color:var(--text-hi); font-weight:700; }
 
 .birthday-title{
   display:flex; align-items:center; gap:10px;
-  font-size:13px; letter-spacing:1.5px; text-transform:uppercase;
-  color:var(--pink-dim); font-weight:700; margin-bottom:8px;
+  font-size:12px; letter-spacing:1.5px; text-transform:uppercase;
+  color:rgba(255,255,255,0.9); font-weight:800; margin-bottom:10px;
 }
-.birthday-list{
-  display:flex; flex-direction:column; gap:6px;
-  max-height:160px; overflow-y:auto;
+.birthday-marquee-wrap{
+  position:relative;
+  overflow:hidden;
+  width:100%;
+  padding:4px 0 2px;
+}
+.birthday-marquee-track{
+  display:flex;
+  width:max-content;
+  gap:12px;
+  animation: birthday-marquee 16s linear infinite;
+  will-change:transform;
 }
 .birthday-item{
   display:flex; align-items:center; gap:10px;
+  min-width:195px;
+  padding:8px 10px;
+  border-radius:12px;
+  background:rgba(255,255,255,0.08);
+}
+.birthday-form-preview{
+  width:40px; height:40px; border-radius:50%;
+  overflow:hidden; border:2px solid rgba(255,255,255,0.35);
+  background:linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05));
+  display:flex; align-items:center; justify-content:center;
+}
+.birthday-form-preview img{
+  width:100%; height:100%; object-fit:cover; display:block;
+}
+.item-thumb-empty.with-photo{
+  overflow:hidden; border-radius:50%;
+}
+.item-thumb-empty.with-photo img{
+  width:100%; height:100%; object-fit:cover; display:block;
 }
 .birthday-avatar{
   width:30px; height:30px; flex-shrink:0;
@@ -267,6 +309,10 @@ body{
   color:#FFFFFF;
   display:flex; align-items:center; justify-content:center;
   font-weight:800; font-size:12px;
+  overflow:hidden;
+}
+.birthday-avatar img{
+  width:100%; height:100%; display:block; object-fit:cover;
 }
 .birthday-info{ min-width:0; }
 .birthday-name{
@@ -277,28 +323,33 @@ body{
   font-size:11px; color:var(--text-mid); font-weight:500;
   margin-top:0;
 }
+@keyframes birthday-marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
 
 .verse-title{
   display:flex; align-items:center; gap:10px;
-  font-size:13px; letter-spacing:1.5px; text-transform:uppercase;
-  color:var(--pink-dim); font-weight:700; margin-bottom:8px;
+  font-size:12px; letter-spacing:1.5px; text-transform:uppercase;
+  color:rgba(255,255,255,0.9); font-weight:800; margin-bottom:10px;
 }
 .verse-text{
   font-family:Georgia, 'Times New Roman', serif;
   font-style:italic;
   font-weight:700;
-  font-size:16px;
-  line-height:1.32;
+  font-size:15px;
+  line-height:1.28;
   color:var(--text-hi);
   display:-webkit-box;
   -webkit-box-orient:vertical;
   -webkit-line-clamp:4;
   line-clamp:4;
   overflow:hidden;
+  max-height:calc(15px * 1.28 * 4);
 }
 .verse-ref{
   margin-top:8px;
-  font-size:13px; font-weight:600; color:var(--orange-dim);
+  font-size:11px; font-weight:700; color:rgba(255,255,255,0.8);
 }
 
 /* ---------- HERO: carrusel ---------- */
@@ -575,3 +626,5 @@ body{
 .item-info{ flex:1; min-width:0; }
 .item-info .t{ font-weight:700; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .item-info .d{ font-size:12px; color:var(--text-low); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+

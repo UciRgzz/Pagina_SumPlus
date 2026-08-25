@@ -156,7 +156,6 @@ function updateClocks(){
   document.getElementById('dateLocal').textContent = `${dateFmt.format(now)}, Semana ${week}`;
 
   // Relojes de referencia (hora:minuto, 12h con AM/PM chiquito).
-  // Cada minuto se alterna entre los dos grupos de ciudades de WORLD_CLOCK_GROUPS.
   const groupIndex = Math.floor(now.getTime() / 60000) % WORLD_CLOCK_GROUPS.length;
   if(groupIndex !== worldClockGroupIndex){
     worldClockGroupIndex = groupIndex;
@@ -165,7 +164,7 @@ function updateClocks(){
     setTimeout(() => {
       renderWorldClockGroup(groupIndex, new Date());
       worldClocksEl.classList.remove('wc-slide-out');
-      worldClocksEl.classList.add('wc-slide-in'); // aparecen ya colocadas a la izquierda, sin animar
+      worldClocksEl.classList.add('wc-slide-in'); // 
       void worldClocksEl.offsetWidth; // fuerza reflow para poder animar el siguiente cambio
       worldClocksEl.classList.remove('wc-slide-in'); // y ahora sí entran deslizándose a su lugar
     }, 450);
@@ -227,23 +226,24 @@ async function updateWeather(){
     document.getElementById('weatherDesc').textContent = 'Clima no disponible';
   }
 }
-
-/* ================= PANEL ROTATIVO: cumpleaños / palabra del día =================
-   Comparten una sola tarjeta que va rotando entre ellos cuando ambos tienen contenido;
-   si solo uno tiene contenido se queda fijo, y si ninguno tiene se oculta por completo. */
+/* ================= PANEL ROTATIVO: cumpleaños / palabra del día ================= */
 function birthdayPanelHtml(list){
   return `
     <div class="birthday-title"><i class="bi bi-gift-fill"></i> Cumpleaños del mes</div>
-    <div class="birthday-list">
-      ${list.map(b => `
-        <div class="birthday-item">
-          <div class="birthday-avatar">${escapeHtml(initials(b.name))}</div>
-          <div class="birthday-info">
-            <div class="birthday-name">${escapeHtml(b.name)}</div>
-            <div class="birthday-date">${b.day} de ${BIRTHDAY_MONTH_NAMES[b.month - 1]} de ${new Date().getFullYear()}</div>
+    <div class="birthday-marquee-wrap">
+      <div class="birthday-marquee-track">
+        ${list.concat(list).map((b, index) => `
+          <div class="birthday-item" key="${index}">
+            <div class="birthday-avatar ${b.photo ? 'has-photo' : ''}">
+              ${b.photo ? `<img src="${b.photo}" alt="${escapeHtml(b.name)}">` : escapeHtml(initials(b.name))}
+            </div>
+            <div class="birthday-info">
+              <div class="birthday-name">${escapeHtml(b.name)}</div>
+              <div class="birthday-date">${b.day} de ${BIRTHDAY_MONTH_NAMES[b.month - 1]} de ${new Date().getFullYear()}</div>
+            </div>
           </div>
-        </div>
-      `).join('')}
+        `).join('')}
+      </div>
     </div>
   `;
 }
