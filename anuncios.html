@@ -88,6 +88,8 @@
   <canvas id="offHoursCanvas"></canvas>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase-config.js"></script>
 <script src="data.js"></script>
 <script>
 /* ================= CONFIG PANTALLA ================= */
@@ -257,9 +259,10 @@ function versePanelHtml(verse){
 
 // Cumpleaños y versículo ahora son tarjetas independientes y fijas (ya no se turnan);
 // cada una se oculta sola si no tiene contenido que mostrar.
-function refreshInfoPanels(){
+async function refreshInfoPanels(){
   const birthdayCard = document.getElementById('birthdayCard');
-  const thisMonthBirthdays = loadBirthdays()
+  const allBirthdays = await fetchBirthdays();
+  const thisMonthBirthdays = allBirthdays
     .filter(b => isBirthdayInCurrentMonth(b.month))
     .sort((a,b)=> a.day - b.day);
   if(thisMonthBirthdays.length > 0){
@@ -270,7 +273,7 @@ function refreshInfoPanels(){
   }
 
   const verseCard = document.getElementById('verseCard');
-  const verse = loadDisplayVerse();
+  const verse = await loadDisplayVerse();
   if(verse){
     verseCard.style.display = 'flex';
     verseCard.innerHTML = versePanelHtml(verse);
@@ -279,20 +282,10 @@ function refreshInfoPanels(){
   }
 }
 
-refreshInfoPanels();
-updateWeather();
-setInterval(updateWeather, WEATHER_REFRESH);
-
-// Versículo automático: se trae de la API solo si no hay uno cacheado para hoy,
-// y se revisa cada rato para detectar el cambio de día sin recargar la pantalla.
 const AUTO_VERSE_CHECK = 30 * 60 * 1000; // cada 30 min
-refreshAutoVerse().then(changed => { if(changed && !loadVerse()) refreshInfoPanels(); });
-setInterval(() => {
-  refreshAutoVerse().then(changed => { if(changed && !loadVerse()) refreshInfoPanels(); });
-}, AUTO_VERSE_CHECK);
 
-let announcements = loadAnnouncements();
-let videos = seedDefaultVideosIfNeeded(loadVideos());
+let announcements = [];
+let videos = [];
 let playlist = [];
 let currentSlide = 0;
 let carouselTimer = null;
@@ -490,17 +483,21 @@ document.addEventListener('keydown', (e)=>{
   if(e.key === 'ArrowLeft') goToPrev();
 });
 
-/* Si el editor está abierto en otra pestaña del mismo navegador, refleja los cambios de inmediato. */
-window.addEventListener('storage', (e)=>{
-  if(e.key === STORAGE_KEY || e.key === STORAGE_KEY_VIDEOS){
-    announcements = loadAnnouncements();
-    videos = loadVideos();
-    renderCarousel();
-  }
-  if(e.key === STORAGE_KEY_BIRTHDAYS || e.key === STORAGE_KEY_VERSE || e.key === STORAGE_KEY_AUTO_VERSE){
-    refreshInfoPanels();
-  }
-});
+async function refreshAnnouncementsAndVideos(){
+  [announcements, videos] = await Promise.all([fetchAnnouncements(), fetchVideos()]);
+  renderCarousel();
+}
+
+/* Reemplaza al antiguo evento `storage` (que solo servía entre pestañas del mismo
+   navegador): con Supabase Realtime, cualquier cambio guardado desde OTRA
+   computadora llega aquí al instante y la pantalla se actualiza sola. */
+supabaseClient
+  .channel('public:content-changes')
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, refreshAnnouncementsAndVideos)
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'videos' }, refreshAnnouncementsAndVideos)
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'birthdays' }, refreshInfoPanels)
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'verse' }, refreshInfoPanels)
+  .subscribe();
 
 /* ================= CUIDADO DE PANTALLA (anti-quemado) =================*/
 const PIXEL_SHIFT_INTERVAL = 5 * 60 * 1000; // cada 5 min
@@ -618,7 +615,22 @@ function exitOffHours(){
   stopBubbleScreensaver();
   renderCarousel();
 }
-renderCarousel(); // primer dibujo del carrusel al cargar la página
+/* ================= INIT ================= */
+(async function init(){
+  await refreshInfoPanels();
+  updateWeather();
+  setInterval(updateWeather, WEATHER_REFRESH);
+
+  // Versículo automático: se trae de la API solo si no hay uno cacheado para hoy,
+  // y se revisa cada rato para detectar el cambio de día sin recargar la pantalla.
+  const checkAutoVerse = () => refreshAutoVerse().then(async changed => {
+    if(changed && !(await fetchVerse())) refreshInfoPanels();
+  });
+  checkAutoVerse();
+  setInterval(checkAutoVerse, AUTO_VERSE_CHECK);
+
+  await refreshAnnouncementsAndVideos(); // primer dibujo del carrusel al cargar la página
+})();
 
 setTimeout(()=> location.reload(), 60 * 60 * 1000);
 </script>
