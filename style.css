@@ -273,7 +273,12 @@ body{
   width:100%;
   padding:4px 0 2px;
 }
-.birthday-marquee-track{
+.birthday-marquee-wrap.static .birthday-marquee-track{
+  animation:none;
+  transform:none;
+  width:100%;
+}
+.birthday-marquee-wrap.scrolling .birthday-marquee-track{
   display:flex;
   width:max-content;
   gap:12px;

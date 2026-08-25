@@ -228,11 +228,13 @@ async function updateWeather(){
 }
 /* ================= PANEL ROTATIVO: cumpleaños / palabra del día ================= */
 function birthdayPanelHtml(list){
+  const shouldScroll = list.length > 1;
+  const items = shouldScroll ? list.concat(list) : list;
   return `
     <div class="birthday-title"><i class="bi bi-gift-fill"></i> Cumpleaños del mes</div>
-    <div class="birthday-marquee-wrap">
+    <div class="birthday-marquee-wrap ${shouldScroll ? 'scrolling' : 'static'}">
       <div class="birthday-marquee-track">
-        ${list.concat(list).map((b, index) => `
+        ${items.map((b, index) => `
           <div class="birthday-item" key="${index}">
             <div class="birthday-avatar ${b.photo ? 'has-photo' : ''}">
               ${b.photo ? `<img src="${b.photo}" alt="${escapeHtml(b.name)}">` : escapeHtml(initials(b.name))}
