@@ -92,6 +92,7 @@ body{
 
 /* ---------- Encabezado de la pantalla ---------- */
 .page-header{
+  position:relative;
   display:flex;
   align-items:flex-start;
   justify-content:space-between;
@@ -360,6 +361,7 @@ body{
 /* Pantallas con poca altura: toda la información debe quedar visible sin scroll. */
 @media (max-height:800px){
   .page-header{ padding:10px 28px 0; }
+  .screensaver-toggle{ top:52px; right:28px; }
   .page-header-title{ font-size:40px; }
   .page-header-rule{ margin:8px 0 7px; }
   .page-header-sub{ font-size:13px; }
@@ -559,7 +561,10 @@ body{
 }
 .edit-toggle{ right:16px; }
 .skip-toggle{ left:16px; }
-.screensaver-toggle{ top:64px; right:40px; bottom:auto; left:auto; z-index:10000; } /* debajo del logo SunPlus; por encima del overlay de burbujas (z-index 9999) para poder apagarlo */
+/* Ancla dentro de .page-header (no en la ventana) para que nunca invada las tarjetas
+   del sidebar, sin importar el alto de pantalla. Por encima del overlay de burbujas
+   (z-index 9999) para poder apagarlo. */
+.screensaver-toggle{ position:absolute; top:52px; right:40px; bottom:auto; left:auto; z-index:10000; }
 .edit-toggle:hover, .skip-toggle:hover, .screensaver-toggle:hover{ opacity:1; color:var(--pink); }
 .edit-toggle i, .skip-toggle i, .screensaver-toggle i{ font-size:16px; }
 
