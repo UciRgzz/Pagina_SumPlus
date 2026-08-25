@@ -99,6 +99,14 @@
           <input type="date" class="form-control" id="inpBirthdayDate">
           <div class="form-text">Solo se usa el día y el mes; se repite cada año.</div>
         </div>
+        <div class="col-12">
+          <label class="form-label" for="inpBirthdayPhoto">Foto del cumpleañero (opcional)</label>
+          <div class="d-flex align-items-center gap-3">
+            <input type="file" class="form-control" id="inpBirthdayPhoto" accept="image/*">
+            <div class="birthday-form-preview" id="birthdayPhotoPreview"></div>
+          </div>
+          <div class="form-text">Si no subes ninguna imagen, se usará la inicial del nombre.</div>
+        </div>
         <div class="col-12 d-flex gap-2 justify-content-end">
           <button class="btn btn-outline-secondary" id="clearBirthdayForm">Limpiar</button>
           <button class="btn btn-primary" id="addBirthday"><i class="bi bi-plus-lg me-1"></i>Agregar cumpleaños</button>
@@ -165,9 +173,12 @@ const addVideoBtn = document.getElementById('addVideo');
 const clearVideoFormBtn = document.getElementById('clearVideoForm');
 const inpBirthdayName = document.getElementById('inpBirthdayName');
 const inpBirthdayDate = document.getElementById('inpBirthdayDate');
+const inpBirthdayPhoto = document.getElementById('inpBirthdayPhoto');
+const birthdayPhotoPreview = document.getElementById('birthdayPhotoPreview');
 const addBirthdayBtn = document.getElementById('addBirthday');
 const clearBirthdayFormBtn = document.getElementById('clearBirthdayForm');
 let birthdays = loadBirthdays();
+let pendingBirthdayPhoto = null;
 
 /* ================= ANUNCIOS ================= */
 //variable para almacenar la imagen pedindg.
@@ -316,8 +327,24 @@ function renderVideoList(){
 function resetBirthdayForm(){
   inpBirthdayName.value = '';
   inpBirthdayDate.value = '';
+  inpBirthdayPhoto.value = '';
+  pendingBirthdayPhoto = null;
+  birthdayPhotoPreview.innerHTML = '';
 }
 clearBirthdayFormBtn.addEventListener('click', resetBirthdayForm);
+
+inpBirthdayPhoto.addEventListener('change', ()=>{
+  const file = inpBirthdayPhoto.files[0];
+  if(!file){
+    pendingBirthdayPhoto = null;
+    birthdayPhotoPreview.innerHTML = '';
+    return;
+  }
+  compressImage(file, (dataUrl)=>{
+    pendingBirthdayPhoto = dataUrl;
+    birthdayPhotoPreview.innerHTML = `<img src="${dataUrl}" alt="Vista previa del cumpleañero">`;
+  });
+});
 
 addBirthdayBtn.addEventListener('click', ()=>{
   const name = inpBirthdayName.value.trim();
@@ -325,7 +352,7 @@ addBirthdayBtn.addEventListener('click', ()=>{
   if(!name){ inpBirthdayName.focus(); return; }
   if(!dateVal){ inpBirthdayDate.focus(); return; }
   const [, month, day] = dateVal.split('-').map(Number);
-  const newBirthday = { name, month, day, id: Date.now() };
+  const newBirthday = { name, month, day, photo: pendingBirthdayPhoto || null, id: Date.now() };
   birthdays.push(newBirthday);
   if(saveBirthdays(birthdays)){
     window.location.href = 'anuncios.html';
@@ -349,7 +376,9 @@ function renderBirthdayList(){
       const item = document.createElement('div');
       item.className = 'list-group-item d-flex align-items-center gap-3 rounded mb-2';
       item.innerHTML = `
-        <div class="item-thumb-empty">${escapeHtml(initials(b.name))}</div>
+        <div class="item-thumb-empty ${b.photo ? 'with-photo' : ''}">
+          ${b.photo ? `<img src="${b.photo}" alt="${escapeHtml(b.name)}">` : escapeHtml(initials(b.name))}
+        </div>
         <div class="item-info">
           <div class="t">${escapeHtml(b.name)}</div>
           <div class="d">${b.day} de ${BIRTHDAY_MONTH_NAMES[b.month - 1]} de ${new Date().getFullYear()}</div>
