@@ -144,6 +144,8 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase-config.js"></script>
 <script src="data.js"></script>
 <script>
 /* ================= PESTAÑAS ================= */
@@ -156,9 +158,13 @@ document.querySelectorAll('.editor-tab').forEach(btn=>{
   });
 });
 
-let announcements = loadAnnouncements();
-let videos = seedDefaultVideosIfNeeded(loadVideos());
-let pendingImage = null;
+let announcements = [];
+let videos = [];
+let birthdays = [];
+let pendingImageBlob = null;
+let pendingImagePreviewUrl = null;
+let pendingBirthdayPhotoBlob = null;
+let pendingBirthdayPreviewUrl = null;
 
 const inpTitle = document.getElementById('inpTitle');
 const inpDesc = document.getElementById('inpDesc');
@@ -177,64 +183,49 @@ const inpBirthdayPhoto = document.getElementById('inpBirthdayPhoto');
 const birthdayPhotoPreview = document.getElementById('birthdayPhotoPreview');
 const addBirthdayBtn = document.getElementById('addBirthday');
 const clearBirthdayFormBtn = document.getElementById('clearBirthdayForm');
-let birthdays = loadBirthdays();
-let pendingBirthdayPhoto = null;
 
 /* ================= ANUNCIOS ================= */
 //variable para almacenar la imagen pedindg.
-inpFile.addEventListener('change', ()=>{
+inpFile.addEventListener('change', async ()=>{
   const file = inpFile.files[0];
-  if(!file) { pendingImage = null; thumbPreview.style.display='none'; return; }
-  compressImage(file, (dataUrl)=>{
-    pendingImage = dataUrl;
-    thumbPreview.src = dataUrl;
+  if(!file){ pendingImageBlob = null; thumbPreview.style.display='none'; return; }
+  try{
+    const blob = await compressImage(file);
+    pendingImageBlob = blob;
+    if(pendingImagePreviewUrl) URL.revokeObjectURL(pendingImagePreviewUrl);
+    pendingImagePreviewUrl = URL.createObjectURL(blob);
+    thumbPreview.src = pendingImagePreviewUrl;
     thumbPreview.style.display = 'block';
-  });
+  }catch(e){
+    alert('No se pudo procesar la imagen.');
+  }
 });
-
-//comprime la imagen seleccionada para que no ocupe demasiado espacio en el almacenamiento del navegador.
-function compressImage(file, callback){
-  const reader = new FileReader();
-  reader.onload = (e)=>{
-    const img = new Image();
-    img.onload = ()=>{
-      let { width, height } = img;
-      if(width > MAX_IMG_WIDTH){
-        height = Math.round(height * (MAX_IMG_WIDTH / width));
-        width = MAX_IMG_WIDTH;
-      }
-      const canvas = document.createElement('canvas');
-      canvas.width = width; canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, width, height);
-      callback(canvas.toDataURL('image/jpeg', JPEG_QUALITY));
-    };
-    img.src = e.target.result;  
-  };
-  reader.readAsDataURL(file);
-}
 
 function resetForm(){
   inpTitle.value = '';
   inpDesc.value = '';
   inpEventDate.value = '';
   inpFile.value = '';
-  pendingImage = null;
+  pendingImageBlob = null;
   thumbPreview.style.display = 'none';
 }
 clearFormBtn.addEventListener('click', resetForm);
 
-addAnnBtn.addEventListener('click', ()=>{
+addAnnBtn.addEventListener('click', async ()=>{
   const title = inpTitle.value.trim();
   if(!title){ inpTitle.focus(); return; }
-  const newAnn = { title, desc: inpDesc.value.trim(), eventDate: inpEventDate.value || null, image: pendingImage || null, id: Date.now() };
-  announcements.push(newAnn);
-  if(saveAnnouncements(announcements)){
-    window.location.href = 'anuncios.html';
-  }
+  addAnnBtn.disabled = true;
+  const ok = await addAnnouncement({ title, desc: inpDesc.value.trim(), eventDate: inpEventDate.value || null, imageBlob: pendingImageBlob });
+  addAnnBtn.disabled = false;
+  if(ok) window.location.href = 'anuncios.html';
 });
 
-//esta función renderiza la lista de anuncios en el editor, mostrando el título, 
+async function refreshAnnouncements(){
+  announcements = await fetchAnnouncements();
+  renderAnnList();
+}
+
+//esta función renderiza la lista de anuncios en el editor, mostrando el título,
 // descripción y miniatura si existe, y permite eliminar anuncios.
 function renderAnnList(){
   const wrap = document.getElementById('annList');
@@ -253,17 +244,18 @@ function renderAnnList(){
         <div class="t">${escapeHtml(a.title)}${a.eventDate ? ` <span class="text-muted fw-normal">· ${formatEventDate(a.eventDate)}</span>` : ''}</div>
         <div class="d">${escapeHtml(a.desc || 'Sin descripción')}</div>
       </div>
-      <span class="badge text-bg-secondary" title="Se borra solo pasado este tiempo">${announcementDaysLeft(a.id) === 0 ? 'Vence hoy' : `Vence en ${announcementDaysLeft(a.id)}d`}</span>
+      <span class="badge text-bg-secondary" title="Se borra solo pasado este tiempo">${announcementDaysLeft(a.createdAt) === 0 ? 'Vence hoy' : `Vence en ${announcementDaysLeft(a.createdAt)}d`}</span>
       <button class="btn btn-outline-danger btn-sm" data-id="${a.id}" title="Eliminar"><i class="bi bi-trash3"></i></button>
     `;
     wrap.appendChild(item);
   });
   wrap.querySelectorAll('.btn-outline-danger').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
+    btn.addEventListener('click', async ()=>{
       const id = Number(btn.dataset.id);
-      announcements = announcements.filter(a => a.id !== id);
-      saveAnnouncements(announcements);
-      renderAnnList();
+      const ann = announcements.find(a => a.id === id);
+      btn.disabled = true;
+      const ok = await deleteAnnouncement(id, ann && ann.image);
+      if(ok) await refreshAnnouncements();
     });
   });
 }
@@ -276,7 +268,7 @@ function resetVideoForm(){
 }
 clearVideoFormBtn.addEventListener('click', resetVideoForm);
 
-addVideoBtn.addEventListener('click', ()=>{
+addVideoBtn.addEventListener('click', async ()=>{
   const url = inpVideoUrl.value.trim();
   const youtubeId = extractYouTubeId(url);
   if(!youtubeId){
@@ -284,12 +276,16 @@ addVideoBtn.addEventListener('click', ()=>{
     inpVideoUrl.focus();
     return;
   }
-  const newVideo = { url, title: inpVideoTitle.value.trim(), youtubeId, id: Date.now() };
-  videos.push(newVideo);
-  if(saveVideos(videos)){
-    window.location.href = 'anuncios.html';
-  }
+  addVideoBtn.disabled = true;
+  const ok = await addVideo({ url, title: inpVideoTitle.value.trim(), youtubeId });
+  addVideoBtn.disabled = false;
+  if(ok) window.location.href = 'anuncios.html';
 });
+
+async function refreshVideos(){
+  videos = await fetchVideos();
+  renderVideoList();
+}
 
 function renderVideoList(){
   const wrap = document.getElementById('videoList');
@@ -313,11 +309,11 @@ function renderVideoList(){
     wrap.appendChild(item);
   });
   wrap.querySelectorAll('.btn-outline-danger').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
+    btn.addEventListener('click', async ()=>{
       const id = Number(btn.dataset.id);
-      videos = videos.filter(v => v.id !== id);
-      saveVideos(videos);
-      renderVideoList();
+      btn.disabled = true;
+      const ok = await deleteVideo(id);
+      if(ok) await refreshVideos();
     });
   });
 }
@@ -328,38 +324,47 @@ function resetBirthdayForm(){
   inpBirthdayName.value = '';
   inpBirthdayDate.value = '';
   inpBirthdayPhoto.value = '';
-  pendingBirthdayPhoto = null;
+  pendingBirthdayPhotoBlob = null;
   birthdayPhotoPreview.innerHTML = '';
 }
 clearBirthdayFormBtn.addEventListener('click', resetBirthdayForm);
 
-inpBirthdayPhoto.addEventListener('change', ()=>{
+inpBirthdayPhoto.addEventListener('change', async ()=>{
   const file = inpBirthdayPhoto.files[0];
   if(!file){
-    pendingBirthdayPhoto = null;
+    pendingBirthdayPhotoBlob = null;
     birthdayPhotoPreview.innerHTML = '';
     return;
   }
-  compressImage(file, (dataUrl)=>{
-    pendingBirthdayPhoto = dataUrl;
-    birthdayPhotoPreview.innerHTML = `<img src="${dataUrl}" alt="Vista previa del cumpleañero">`;
-  });
+  try{
+    const blob = await compressImage(file);
+    pendingBirthdayPhotoBlob = blob;
+    if(pendingBirthdayPreviewUrl) URL.revokeObjectURL(pendingBirthdayPreviewUrl);
+    pendingBirthdayPreviewUrl = URL.createObjectURL(blob);
+    birthdayPhotoPreview.innerHTML = `<img src="${pendingBirthdayPreviewUrl}" alt="Vista previa del cumpleañero">`;
+  }catch(e){
+    alert('No se pudo procesar la imagen.');
+  }
 });
 
-addBirthdayBtn.addEventListener('click', ()=>{
+addBirthdayBtn.addEventListener('click', async ()=>{
   const name = inpBirthdayName.value.trim();
   const dateVal = inpBirthdayDate.value;
   if(!name){ inpBirthdayName.focus(); return; }
   if(!dateVal){ inpBirthdayDate.focus(); return; }
   const [, month, day] = dateVal.split('-').map(Number);
-  const newBirthday = { name, month, day, photo: pendingBirthdayPhoto || null, id: Date.now() };
-  birthdays.push(newBirthday);
-  if(saveBirthdays(birthdays)){
-    window.location.href = 'anuncios.html';
-  }
+  addBirthdayBtn.disabled = true;
+  const ok = await addBirthday({ name, month, day, photoBlob: pendingBirthdayPhotoBlob });
+  addBirthdayBtn.disabled = false;
+  if(ok) window.location.href = 'anuncios.html';
 });
 
-//esta función renderiza la lista de cumpleaños en el editor, 
+async function refreshBirthdays(){
+  birthdays = await fetchBirthdays();
+  renderBirthdayList();
+}
+
+//esta función renderiza la lista de cumpleaños en el editor,
 // mostrando el nombre y la fecha
 function renderBirthdayList(){
   const wrap = document.getElementById('birthdayList');
@@ -388,11 +393,12 @@ function renderBirthdayList(){
       wrap.appendChild(item);
     });
   wrap.querySelectorAll('.btn-outline-danger').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
+    btn.addEventListener('click', async ()=>{
       const id = Number(btn.dataset.id);
-      birthdays = birthdays.filter(b => b.id !== id);
-      saveBirthdays(birthdays);
-      renderBirthdayList();
+      const b = birthdays.find(x => x.id === id);
+      btn.disabled = true;
+      const ok = await deleteBirthday(id, b && b.photo);
+      if(ok) await refreshBirthdays();
     });
   });
 }
@@ -404,8 +410,8 @@ const saveVerseBtn = document.getElementById('saveVerseBtn');
 const clearVerseBtn = document.getElementById('clearVerseBtn');
 const verseStatus = document.getElementById('verseStatus');
 
-function renderVerseStatus(){
-  const verse = loadVerse();
+async function renderVerseStatus(){
+  const verse = await fetchVerse();
   if(verse){
     inpVerseText.value = verse.text;
     inpVerseRef.value = verse.reference;
@@ -415,28 +421,32 @@ function renderVerseStatus(){
   }
 }
 
-saveVerseBtn.addEventListener('click', ()=>{
+saveVerseBtn.addEventListener('click', async ()=>{
   const text = inpVerseText.value.trim();
   const reference = inpVerseRef.value.trim();
   if(!text){ inpVerseText.focus(); return; }
   if(!reference){ inpVerseRef.focus(); return; }
-  if(saveVerse({ text, reference })){
-    window.location.href = 'anuncios.html';
-  }
+  saveVerseBtn.disabled = true;
+  const ok = await saveVerse({ text, reference });
+  saveVerseBtn.disabled = false;
+  if(ok) window.location.href = 'anuncios.html';
 });
 
-clearVerseBtn.addEventListener('click', ()=>{
-  clearVerse();
+clearVerseBtn.addEventListener('click', async ()=>{
+  await clearVerse();
   inpVerseText.value = '';
   inpVerseRef.value = '';
-  renderVerseStatus();
+  await renderVerseStatus();
 });
 
 /* ================= INIT ================= */
-renderAnnList();
-renderVideoList();
-renderBirthdayList();
-renderVerseStatus();
+(async function init(){
+  await pruneExpiredAnnouncements();
+  await refreshAnnouncements();
+  await refreshVideos();
+  await refreshBirthdays();
+  await renderVerseStatus();
+})();
 </script>
 </body>
 </html>

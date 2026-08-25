@@ -1,79 +1,187 @@
-/* ================= CONFIG Y ALMACENAMIENTO COMPARTIDO =================*/
+/* ================= CONFIG Y ALMACENAMIENTO COMPARTIDO (Supabase) =================
+   Todo el contenido (anuncios, videos, cumpleaños, versículo) vive ahora en una
+   base de datos Postgres en Supabase, no en el navegador: así lo que agrega el
+   encargado desde cualquier computadora se ve en todas las pantallas. El cliente
+   `supabaseClient` se crea en supabase-config.js, que debe cargarse antes que
+   este archivo. */
 
-const STORAGE_KEY = 'tv_anuncios_v1';
-const STORAGE_KEY_VIDEOS = 'tv_videos_v1';
-const STORAGE_KEY_BIRTHDAYS = 'tv_cumpleanos_v1';
-const STORAGE_KEY_VERSE = 'tv_versiculo_v1';
-const VIDEOS_SEEDED_KEY = 'tv_videos_seeded_v1';
+const IMAGES_BUCKET = 'imagenes';
 const MAX_IMG_WIDTH = 1400;
 const JPEG_QUALITY = 0.8;
 const ANNOUNCEMENT_MAX_AGE_DAYS = 7; // los anuncios se borran solos pasados estos días
 
-// Videos con los que arranca la lista la primera vez .
-const DEFAULT_VIDEOS = [
-  { url:'https://youtu.be/l_6e2-ZsKpE?si=xs_rXl1LzbHlgNFi', title:'' },
-  { url:'https://youtu.be/NaAGVg86AG0?si=Nuscp4WmvAojRjit', title:'' },
-];
-//creamos la función para cargar y guardar la lista de anuncios y videos en el localStorage del navegador.
-function loadList(key){
-  try{
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : [];
-  }catch(e){ return []; }
+/* ---- Comprime la imagen seleccionada a un Blob JPEG liviano, listo para subir ---- */
+function compressImage(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      const img = new Image();
+      img.onload = ()=>{
+        let { width, height } = img;
+        if(width > MAX_IMG_WIDTH){
+          height = Math.round(height * (MAX_IMG_WIDTH / width));
+          width = MAX_IMG_WIDTH;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          blob => blob ? resolve(blob) : reject(new Error('No se pudo procesar la imagen')),
+          'image/jpeg', JPEG_QUALITY
+        );
+      };
+      img.onerror = () => reject(new Error('Archivo de imagen inválido'));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error('No se pudo leer el archivo'));
+    reader.readAsDataURL(file);
+  });
 }
-function saveList(key, list, itemLabel){
-  try{
-    localStorage.setItem(key, JSON.stringify(list));
-    return true;
-  }catch(e){
-    alert(`No se pudo guardar: el almacenamiento del navegador está lleno. Elimina algún ${itemLabel} o usa imágenes más ligeras.`);
-    return false;
+
+/* ---- Sube un Blob de imagen al bucket público y devuelve su URL ---- */
+async function uploadImage(blob){
+  const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+  const { error } = await supabaseClient.storage.from(IMAGES_BUCKET).upload(path, blob, { contentType: 'image/jpeg' });
+  if(error){
+    alert('No se pudo subir la imagen: ' + error.message);
+    return null;
   }
+  const { data } = supabaseClient.storage.from(IMAGES_BUCKET).getPublicUrl(path);
+  return data.publicUrl;
 }
-// El id de cada anuncio es su fecha de creación (Date.now()); lo usamos para saber su antigüedad
-// sin necesitar un campo extra. Los vencidos se descartan y la lista limpia se re-guarda.
-function pruneExpiredAnnouncements(list){
-  const cutoff = Date.now() - ANNOUNCEMENT_MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
-  const fresh = list.filter(a => a.id >= cutoff);
-  if(fresh.length !== list.length) saveList(STORAGE_KEY, fresh, 'anuncio con imagen');
-  return fresh;
+
+async function deleteImageByUrl(url){
+  if(!url) return;
+  const path = url.split(`/${IMAGES_BUCKET}/`).pop();
+  if(!path) return;
+  await supabaseClient.storage.from(IMAGES_BUCKET).remove([path]);
 }
+
+/* ================= ANUNCIOS ================= */
+function announcementCutoffIso(){
+  return new Date(Date.now() - ANNOUNCEMENT_MAX_AGE_DAYS * 24 * 60 * 60 * 1000).toISOString();
+}
+
+function rowToAnnouncement(row){
+  return { id: row.id, title: row.title, desc: row.description || '', eventDate: row.event_date, image: row.image_url, createdAt: row.created_at };
+}
+
+async function fetchAnnouncements(){
+  const { data, error } = await supabaseClient
+    .from('announcements')
+    .select('*')
+    .gte('created_at', announcementCutoffIso())
+    .order('created_at', { ascending: true });
+  if(error){ console.error(error); return []; }
+  return data.map(rowToAnnouncement);
+}
+
+async function addAnnouncement({ title, desc, eventDate, imageBlob }){
+  let image_url = null;
+  if(imageBlob){
+    image_url = await uploadImage(imageBlob);
+    if(image_url === null && imageBlob) return false; // falló la subida, ya se avisó al usuario
+  }
+  const { error } = await supabaseClient.from('announcements').insert({
+    title, description: desc || null, event_date: eventDate || null, image_url,
+  });
+  if(error){ alert('No se pudo guardar el anuncio: ' + error.message); return false; }
+  return true;
+}
+
+async function deleteAnnouncement(id, imageUrl){
+  const { error } = await supabaseClient.from('announcements').delete().eq('id', id);
+  if(error){ alert('No se pudo eliminar: ' + error.message); return false; }
+  if(imageUrl) await deleteImageByUrl(imageUrl);
+  return true;
+}
+
+// Borra (fila + imagen) los anuncios ya vencidos. Se llama desde el editor al cargar.
+async function pruneExpiredAnnouncements(){
+  const cutoff = announcementCutoffIso();
+  const { data } = await supabaseClient.from('announcements').select('id, image_url').lt('created_at', cutoff);
+  if(!data || data.length === 0) return;
+  await supabaseClient.from('announcements').delete().lt('created_at', cutoff);
+  data.forEach(row => { if(row.image_url) deleteImageByUrl(row.image_url); });
+}
+
 // Devuelve los días que le quedan a un anuncio antes de expirar
-function announcementDaysLeft(id){
-  const ageMs = Date.now() - id;
+function announcementDaysLeft(createdAtIso){
+  const ageMs = Date.now() - new Date(createdAtIso).getTime();
   const daysLeft = ANNOUNCEMENT_MAX_AGE_DAYS - Math.floor(ageMs / (24 * 60 * 60 * 1000));
   return Math.max(daysLeft, 0);
 }
-const loadAnnouncements = ()=> pruneExpiredAnnouncements(loadList(STORAGE_KEY));
-const saveAnnouncements = (list)=> saveList(STORAGE_KEY, list, 'anuncio con imagen');
-const loadVideos = ()=> loadList(STORAGE_KEY_VIDEOS);
-const saveVideos = (list)=> saveList(STORAGE_KEY_VIDEOS, list, 'video');
-const loadBirthdays = ()=> loadList(STORAGE_KEY_BIRTHDAYS);
-const saveBirthdays = (list)=> saveList(STORAGE_KEY_BIRTHDAYS, list, 'cumpleaños');
 
-function loadVerse(){
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY_VERSE);
-    return raw ? JSON.parse(raw) : null;
-  }catch(e){ return null; }
+/* ================= VIDEOS ================= */
+async function fetchVideos(){
+  const { data, error } = await supabaseClient.from('videos').select('*').order('created_at', { ascending: true });
+  if(error){ console.error(error); return []; }
+  return data.map(row => ({ id: row.id, url: row.url, title: row.title || '', youtubeId: row.youtube_id }));
 }
-function saveVerse(verse){
-  try{
-    localStorage.setItem(STORAGE_KEY_VERSE, JSON.stringify(verse));
-    return true;
-  }catch(e){
-    alert('No se pudo guardar la palabra del día: el almacenamiento del navegador está lleno.');
-    return false;
+
+async function addVideo({ url, title, youtubeId }){
+  const { error } = await supabaseClient.from('videos').insert({ url, title: title || null, youtube_id: youtubeId });
+  if(error){ alert('No se pudo guardar el video: ' + error.message); return false; }
+  return true;
+}
+
+async function deleteVideo(id){
+  const { error } = await supabaseClient.from('videos').delete().eq('id', id);
+  if(error){ alert('No se pudo eliminar: ' + error.message); return false; }
+  return true;
+}
+
+/* ================= CUMPLEAÑOS ================= */
+async function fetchBirthdays(){
+  const { data, error } = await supabaseClient.from('birthdays').select('*').order('created_at', { ascending: true });
+  if(error){ console.error(error); return []; }
+  return data.map(row => ({ id: row.id, name: row.name, month: row.month, day: row.day, photo: row.photo_url }));
+}
+
+async function addBirthday({ name, month, day, photoBlob }){
+  let photo_url = null;
+  if(photoBlob){
+    photo_url = await uploadImage(photoBlob);
+    if(photo_url === null) return false;
   }
+  const { error } = await supabaseClient.from('birthdays').insert({ name, month, day, photo_url });
+  if(error){ alert('No se pudo guardar el cumpleaños: ' + error.message); return false; }
+  return true;
 }
-function clearVerse(){
-  localStorage.removeItem(STORAGE_KEY_VERSE);
+
+async function deleteBirthday(id, photoUrl){
+  const { error } = await supabaseClient.from('birthdays').delete().eq('id', id);
+  if(error){ alert('No se pudo eliminar: ' + error.message); return false; }
+  if(photoUrl) await deleteImageByUrl(photoUrl);
+  return true;
+}
+
+/* ================= PALABRA DEL DÍA (versículo manual) ================= */
+async function fetchVerse(){
+  const { data, error } = await supabaseClient.from('verse').select('*').eq('id', 1).maybeSingle();
+  if(error || !data || !data.text) return null;
+  return { text: data.text, reference: data.reference };
+}
+
+async function saveVerse({ text, reference }){
+  const { error } = await supabaseClient.from('verse').upsert({ id: 1, text, reference, updated_at: new Date().toISOString() });
+  if(error){ alert('No se pudo guardar la palabra del día: ' + error.message); return false; }
+  return true;
+}
+
+async function clearVerse(){
+  const { error } = await supabaseClient.from('verse').delete().eq('id', 1);
+  if(error){ alert('No se pudo restablecer el versículo automático: ' + error.message); return false; }
+  return true;
 }
 
 /* ================= VERSÍCULO AUTOMÁTICO DEL DÍA =================
    Si no hay un versículo manual guardado (arriba), se muestra uno de esta lista
    elegido automáticamente según el día del año, y se trae el texto de una API
-   pública de la Biblia (Versión Biblia Libre) para no tener que cargarlo a mano. */
+   pública de la Biblia (Versión Biblia Libre) para no tener que cargarlo a mano.
+   Esto sí se cachea por dispositivo en localStorage: no es contenido que el
+   encargado edite, cada pantalla lo puede volver a pedir sin problema. */
 const STORAGE_KEY_AUTO_VERSE = 'tv_versiculo_auto_v1';
 const BIBLE_API_VERSION = 'es-vbl';
 
@@ -126,8 +234,8 @@ function pickDailyReference(){
 }
 
 // Verso manual (si existe) tiene prioridad; si no, el automático ya cacheado para hoy.
-function loadDisplayVerse(){
-  const manual = loadVerse();
+async function loadDisplayVerse(){
+  const manual = await fetchVerse();
   if(manual) return manual;
   try{
     const raw = localStorage.getItem(STORAGE_KEY_AUTO_VERSE);
@@ -197,16 +305,6 @@ function extractYouTubeId(url){
     if(m) return m[1];
   }
   return null;
-}
-//creamos la función para inicializar la lista de videos con los predeterminados si no hay videos guardados en el localStorage.
-function seedDefaultVideosIfNeeded(list){
-  if(list.length > 0 || localStorage.getItem(VIDEOS_SEEDED_KEY)) return list;
-  const seeded = DEFAULT_VIDEOS
-    .map((v, i)=> ({ url:v.url, title:v.title, youtubeId: extractYouTubeId(v.url), id: Date.now() + i }))
-    .filter(v => v.youtubeId);
-  saveVideos(seeded);
-  localStorage.setItem(VIDEOS_SEEDED_KEY, '1');
-  return seeded;
 }
 
 function escapeHtml(str){
