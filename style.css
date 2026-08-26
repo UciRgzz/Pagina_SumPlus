@@ -688,7 +688,7 @@ body{
 
 /*Adaptacion a pantallas muy pequeñas (ej. 720p)*/
 @media (max-width: 720px){
-  html, body {overflow:auto; height:auto; min-height:100vh; }
+  html, body{ height:auto; overflow-x:hidden; overflow-y:visible; }
   .stage{ height:auto; min-height:100vh; flex-direction:column; }
   .stage-main { flex-direction:column; pading:10px 16px 84px; gap:16px; }
 
