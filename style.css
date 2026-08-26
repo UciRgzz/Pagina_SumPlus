@@ -705,9 +705,11 @@ body{
   .slide-img-frame, .slide-video-wrap{ max-height:48vh; }
 
   .sidebar{ width: 100%; max-height:none; overflow: visible;}
+  .birthday-card, .verse-card{ flex:0 0 auto; justify-content:flex-start; }
   .clocks-time{ font-size:42px; }
   .world-clock-item .hour{ font-size:13px; }
 
   .edit-toggle, .skip-toggle{width:34px; height:34px;}
   .screensaver-toggle{ top:auto; bottom:16px; right:60px; }
+  .verse-text{ display:block; width:100%; min-height:38px; color:#FFFFFF; }
 }
