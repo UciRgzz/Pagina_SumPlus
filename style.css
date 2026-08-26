@@ -577,10 +577,12 @@ body{
 }
 .edit-toggle{ right:16px; }
 .skip-toggle{ left:16px; }
-/* Ancla dentro de .page-header (no en la ventana) para que nunca invada las tarjetas
-   del sidebar, sin importar el alto de pantalla. Por encima del overlay de burbujas
-   (z-index 9999) para poder apagarlo. */
-.screensaver-toggle{ position:absolute; top:52px; right:40px; bottom:auto; left:auto; z-index:10000; }
+/* Fijo respecto a la ventana (no dentro de #stageRoot): ese contenedor recibe un
+   transform por el anti-quemado, y transform crea un contexto de apilamiento propio
+   que atraparía este botón por debajo del overlay de burbujas aunque tenga z-index
+   más alto. Estando afuera, su z-index 10000 sí gana contra el overlay (9999) y se
+   puede usar para apagarlo. */
+.screensaver-toggle{ position:fixed; top:52px; right:40px; bottom:auto; z-index:10000; }
 .edit-toggle:hover, .skip-toggle:hover, .screensaver-toggle:hover{ opacity:1; color:var(--pink); }
 .edit-toggle i, .skip-toggle i, .screensaver-toggle i{ font-size:16px; }
 

@@ -29,7 +29,6 @@ create table if not exists birthdays (
   created_at timestamptz not null default now()
 );
 
--- Fila única (id siempre 1) para el versículo manual. Si no existe ninguna fila,
 -- la pantalla muestra el versículo automático del día (igual que antes).
 create table if not exists verse (
   id smallint primary key default 1 check (id = 1),
@@ -47,12 +46,7 @@ select * from (values
 where not exists (select 1 from videos);
 
 -- ---------- Seguridad (RLS) ----------
--- Este sitio no tiene login (igual que antes con localStorage): cualquiera con la
--- URL del editor puede agregar/borrar contenido. Estas políticas dejan lectura y
--- escritura abiertas para que tanto la pantalla del TV como el editor (usando la
--- "anon key", que es pública) puedan operar sin necesidad de un servidor propio.
--- Si más adelante quieren restringirlo (por ejemplo con una contraseña en el
--- editor o con Supabase Auth), estas políticas son el lugar para endurecer.
+
 
 alter table announcements enable row level security;
 alter table videos enable row level security;
