@@ -690,14 +690,14 @@ body{
 @media (max-width: 720px){
   html, body{ height:auto; overflow-x:hidden; overflow-y:visible; }
   .stage{ height:auto; min-height:100vh; flex-direction:column; }
-  .stage-main { flex-direction:column; pading:10px 16px 84px; gap:16px; }
+  .stage-main { flex-direction:column; padding:10px 16px 84px; gap:16px; }
 
   .page-header{ padding:10px 16px 0; flex-wrap:wrap; gap:8px; }
   .page-header-title{ font-size:32px; }
   .page-header-sub{ font-size:12px; }
   .brand-mark{ transform:scale(1); }
 
-  .stage-hero{ flex: none; height: 56vh;; main-height:260; }
+  .stage-hero{ flex:none; height:56vh; min-height:260px; }
 
   .slide-title{ font-size:26px; }
   .slide-desc{ font-size:15px; }
@@ -708,6 +708,6 @@ body{
   .clocks-time{ font-size:42px; }
   .world-clock-item .hour{ font-size:13px; }
 
-  .edit-toggle, skip-toggle{width:34px; height:34px;}
+  .edit-toggle, .skip-toggle{width:34px; height:34px;}
   .screensaver-toggle{ top:auto; bottom:16px; right:60px; }
 }
