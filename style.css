@@ -690,7 +690,7 @@ body{
 @media (max-width: 720px){
   html, body {overflow:auto; height:auto; min-height:100vh; }
   .stage{ height:auto; min-height:100vh; flex-direction:column; }
-  .stage-main { flex-direction:column; pading:10px 16px 16px; gap:16px; }
+  .stage-main { flex-direction:column; pading:10px 16px 84px; gap:16px; }
 
   .page-header{ padding:10px 16px 0; flex-wrap:wrap; gap:8px; }
   .page-header-title{ font-size:32px; }
