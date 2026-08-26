@@ -686,4 +686,28 @@ body{
 .item-info .t{ font-weight:700; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .item-info .d{ font-size:12px; color:var(--text-low); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
+/*Adaptacion a pantallas muy pequeñas (ej. 720p)*/
+@media (max-width: 720px){
+  html, body {overflow:auto; height:auto; min-height:100vh; }
+  .stage{ height:auto; min-height:100vh; flex-direction:column; }
+  .stage-main { flex-direction:column; pading:10px 16px 16px; gap:16px; }
 
+  .page-header{ padding:10px 16px 0; flex-wrap:wrap; gap:8px; }
+  .page-header-title{ font-size:32px; }
+  .page-header-sub{ font-size:12px; }
+  .brand-mark{ transform:scale(1); }
+
+  .stage-hero{ flex: none; height: 56vh;; main-height:260; }
+
+  .slide-title{ font-size:26px; }
+  .slide-desc{ font-size:15px; }
+  .slide.text-only .slide-title{ font-size:32px; }
+  .slide-img-frame, .slide-video-wrap{ max-height:48vh; }
+
+  .sidebar{ width: 100%; max-height:none; overflow: visible;}
+  .clocks-time{ font-size:42px; }
+  .world-clock-item .hour{ font-size:13px; }
+
+  .edit-toggle, skip-toggle{width:34px; height:34px;}
+  .screensaver-toggle{ top:auto; bottom:16px; right:60px; }
+}
