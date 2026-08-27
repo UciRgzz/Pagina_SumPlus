@@ -315,9 +315,13 @@ function initYouTubePlayer(elementId, videoId, slideIndex){
   const create = ()=>{
     ytPlayers[slideIndex] = new YT.Player(elementId, {
       videoId,
-      playerVars:{ autoplay:0, mute:1, controls:0, rel:0, modestbranding:1, iv_load_policy:3, playsinline:1, disablekb:1, fs:0 },
+      playerVars:{ autoplay:0, mute:1, controls:0, rel:0, modestbranding:1, iv_load_policy:3, playsinline:1, disablekb:1, fs:0, quality:'hd1080' },
       events:{
         onReady:()=>{
+          // Fuerza la máxima resolución disponible al cargar
+          try{
+            ytPlayers[slideIndex].setPlaybackQuality('hd1080');
+          }catch(e){}
           if(playersPendingAutoplay.has(slideIndex)){
             playersPendingAutoplay.delete(slideIndex);
             ytPlayers[slideIndex].playVideo();

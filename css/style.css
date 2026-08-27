@@ -452,8 +452,6 @@ body{
 }
 :root{ --border-blue:#E2592A; }
 
-/* Envoltura sin recorte: existe solo para que la pastilla de evento se pueda asomar
-   fuera del marco de la imagen sin que .slide-img-wrap (que sí recorta) se la coma. */
 .slide-img-frame{
   position:relative;
   flex:1 1 auto;

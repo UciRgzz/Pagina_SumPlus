@@ -1,9 +1,4 @@
-/* ================= CONFIG Y ALMACENAMIENTO COMPARTIDO (Supabase) =================
-   Todo el contenido (anuncios, videos, cumpleaños, versículo) vive ahora en una
-   base de datos Postgres en Supabase, no en el navegador: así lo que agrega el
-   encargado desde cualquier computadora se ve en todas las pantallas. El cliente
-   `supabaseClient` se crea en supabase-config.js, que debe cargarse antes que
-   este archivo. */
+/* ================= CONFIG Y ALMACENAMIENTO COMPARTIDO (Supabase) =================*/
 
 const IMAGES_BUCKET = 'imagenes';
 const MAX_IMG_WIDTH = 1400;
